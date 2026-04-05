@@ -2,9 +2,29 @@ node_modules/
 dist/
 .next/
 .turbo/
+
 .env
-.env.local
+.env.*
+!.env.example
+
 *.db
 data/
-.DS_Store
 coverage/
+tsconfig.tsbuildinfo
+
+# Playwright
+test-results/
+playwright-report/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+!terraform.tfvars.example
+crash.log
+
+# OS
+.DS_Store
+Thumbs.db

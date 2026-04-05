@@ -1,5 +1,5 @@
 {
-  "name": "cursed-wishes",
+  "name": "cursed-powers",
   "private": true,
   "workspaces": [
     "packages/*",
@@ -10,17 +10,19 @@
     "build": "turbo build",
     "test": "turbo test",
     "lint": "turbo lint",
-    "clean": "turbo clean"
+    "clean": "turbo clean",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "turbo": "^2.5.0",
     "typescript": "^5.8.0"
   },
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "npm@11.6.2",
-  "dependencies": {
-    "openai": "^6.33.0"
-  }
+  "packageManager": "npm@11.6.2"
 }

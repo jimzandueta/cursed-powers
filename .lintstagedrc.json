@@ -1,0 +1,11 @@
+{
+  "*.{ts,tsx}": [
+    "bash -c 'npx tsc -b --noEmit --pretty 2>&1 || (echo \"\\n🧞 The genie rejects your types. Fix them before committing.\" && exit 1)'"
+  ],
+  "apps/api/src/**/*.test.ts": [
+    "bash -c 'cd apps/api && npx vitest related --run'"
+  ],
+  "packages/shared/src/**/*.test.ts": [
+    "bash -c 'cd packages/shared && npx vitest related --run'"
+  ]
+}

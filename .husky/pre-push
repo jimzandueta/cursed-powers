@@ -1,0 +1,5 @@
+echo "🧞 The genie demands a full build and test before you push..."
+echo ""
+npx turbo build && npx turbo test
+echo ""
+echo "🧞 The genie approves. You may push."
