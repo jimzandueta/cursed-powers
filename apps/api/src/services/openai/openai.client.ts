@@ -10,4 +10,4 @@ export function getOpenAIClient(env: Env): OpenAI {
   return client;
 }
 
-export const OPENAI_MODEL = "gpt-4o-mini";
+export const OPENAI_MODEL = "gpt-4.1-mini";

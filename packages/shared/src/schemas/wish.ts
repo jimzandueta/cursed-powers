@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-// ── Constants ──────────────────────────────────────────────
-
 export const WISH_MIN_LENGTH = 2;
 export const WISH_MAX_LENGTH = 200;
 
@@ -15,8 +13,6 @@ export const CATEGORIES = [
 
 export type Category = (typeof CATEGORIES)[number];
 
-// ── Request Schemas ────────────────────────────────────────
-
 export const CreateWishSchema = z.object({
   wish: z
     .string()
@@ -26,11 +22,12 @@ export const CreateWishSchema = z.object({
       WISH_MAX_LENGTH,
       `Wishes must be under ${WISH_MAX_LENGTH} characters.`,
     ),
+  turnstileToken: z.string().optional(),
+  /** Honeypot field — invisible to real users, auto-filled by bots */
+  website: z.string().max(0, "Nice try, bot.").optional().default(""),
 });
 
 export type CreateWishInput = z.infer<typeof CreateWishSchema>;
-
-// ── Gemini Response Schema ─────────────────────────────────
 
 export const GeminiWishResponseSchema = z.object({
   isValidSuperpower: z.boolean(),
@@ -44,14 +41,10 @@ export const GeminiWishResponseSchema = z.object({
     .string()
     .optional()
     .default("Technically True")
-    .pipe(
-      z.enum(CATEGORIES).catch("Technically True"),
-    ),
+    .pipe(z.enum(CATEGORIES).catch("Technically True")),
 });
 
 export type GeminiWishResponse = z.infer<typeof GeminiWishResponseSchema>;
-
-// ── API Response Schemas ───────────────────────────────────
 
 export const WishResultSchema = z.object({
   id: z.string(),

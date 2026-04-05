@@ -11,8 +11,10 @@ const envSchema = z
     GEMINI_API_KEY: z.string().optional().default(""),
     OPENAI_API_KEY: z.string().optional().default(""),
     CORS_ORIGIN: z.string().default("http://localhost:3000"),
-    RATE_LIMIT_MAX: z.coerce.number().default(10),
-    RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60_000),
+    RATE_LIMIT_MAX: z.coerce.number().default(50),
+    RATE_LIMIT_WINDOW_MS: z.coerce.number().default(14_400_000),
+    TURNSTILE_SECRET_KEY: z.string().optional().default(""),
+    REQUEST_SIGNING_KEY: z.string().optional().default("cursed-genie-default-key"),
   })
   .refine((data) => data.GEMINI_API_KEY || data.OPENAI_API_KEY, {
     message: "At least one of GEMINI_API_KEY or OPENAI_API_KEY must be provided",

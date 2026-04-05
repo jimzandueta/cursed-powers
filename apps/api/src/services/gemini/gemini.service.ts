@@ -62,7 +62,8 @@ const FALLBACK_WISHES: GeminiWishResponse[] = [
 function getProvider(env: Env): "gemini" | "openai" {
   if (env.GEMINI_API_KEY) return "gemini";
   if (env.OPENAI_API_KEY) return "openai";
-  return "gemini"; // shouldn't reach here due to env validation
+  /* v8 ignore next 2 */
+  return "gemini";
 }
 
 export async function generateCursedWish(
@@ -109,16 +110,26 @@ async function generateWithGemini(
     if (result) return result;
     logger.error("Gemini returned unparseable response on attempt 1");
   } catch (err) {
-    logger.error({ err: String(err), attempt: 1 }, "Gemini first attempt failed");
+    logger.error(
+      { err: String(err), attempt: 1 },
+      "Gemini first attempt failed",
+    );
   }
 
   // Retry with stricter prompt
   try {
-    const result = await callGemini(model, userPrompt + STRICT_RETRY_SUFFIX, logger);
+    const result = await callGemini(
+      model,
+      userPrompt + STRICT_RETRY_SUFFIX,
+      logger,
+    );
     if (result) return result;
     logger.error("Gemini returned unparseable response on attempt 2");
   } catch (err) {
-    logger.error({ err: String(err), attempt: 2 }, "Gemini retry attempt failed");
+    logger.error(
+      { err: String(err), attempt: 2 },
+      "Gemini retry attempt failed",
+    );
   }
 
   return null;
@@ -139,10 +150,16 @@ async function callGemini(
     if (validated.success) {
       return validated.data;
     }
-    logger.error({ zodErrors: validated.error.flatten() }, "Gemini response failed Zod validation");
+    logger.error(
+      { zodErrors: validated.error.flatten() },
+      "Gemini response failed Zod validation",
+    );
     return null;
   } catch (parseErr) {
-    logger.error({ parseErr: String(parseErr), text: text.slice(0, 200) }, "Failed to parse Gemini JSON");
+    logger.error(
+      { parseErr: String(parseErr), text: text.slice(0, 200) },
+      "Failed to parse Gemini JSON",
+    );
     return null;
   }
 }

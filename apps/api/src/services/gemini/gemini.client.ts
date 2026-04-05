@@ -10,7 +10,7 @@ export function getGeminiClient(env: Env): GoogleGenerativeAI {
   return client;
 }
 
-export const GEMINI_MODEL = "gemini-2.5-flash";
+export const GEMINI_MODEL = "gemini-2.5-pro";
 
 export const GENERATION_CONFIG = {
   temperature: 1.0,

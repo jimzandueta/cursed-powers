@@ -2,18 +2,31 @@ import { createHash } from "node:crypto";
 import type { FastifyPluginAsync, FastifyRequest } from "fastify";
 import { CreateWishSchema, type WishResult } from "@cursed-wishes/shared";
 import { generateWishId } from "../../lib/id.js";
-import { NotASuperpowerError, ValidationError } from "../../lib/errors.js";
+import {
+  NotASuperpowerError,
+  ValidationError,
+  TeapotError,
+  AppError,
+} from "../../lib/errors.js";
 import { moderateInput } from "../../services/moderation/moderation.service.js";
 import { generateCursedWish } from "../../services/gemini/gemini.service.js";
+import { verifyTurnstileToken } from "../../lib/turnstile.js";
+import { verifyRequestSignature } from "../../lib/hmac.js";
 import {
   createWish,
   getWishById,
   getWishes,
   getRandomWish,
+  findCachedWish,
+  getWishIdsByIpAndPower,
 } from "./wishes.repository.js";
 
 function hashIp(ip: string): string {
   return createHash("sha256").update(ip).digest("hex").slice(0, 16);
+}
+
+function normalizePower(wish: string): string {
+  return wish.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
 function toWishResult(row: {
@@ -39,8 +52,7 @@ function toWishResult(row: {
 }
 
 export const wishRoutes: FastifyPluginAsync = async (app) => {
-  // POST /api/v1/wishes — Generate a cursed wish
-  app.post("/", async (request: FastifyRequest, reply) => {
+  app.post("/", { bodyLimit: 1_024 }, async (request: FastifyRequest, reply) => {
     const env = (app as any).env;
     const body = CreateWishSchema.safeParse(request.body);
 
@@ -50,22 +62,114 @@ export const wishRoutes: FastifyPluginAsync = async (app) => {
       );
     }
 
-    const { wish } = body.data;
+    const { wish, turnstileToken } = body.data;
 
-    // Moderation check
+    if (body.data.website) {
+      request.log.warn({ ip: request.ip }, "Honeypot triggered — bot detected");
+      throw new AppError(
+        403,
+        "BOT_DETECTED",
+        "The genie only grants wishes to humans.",
+      );
+    }
+
+    if (env.REQUEST_SIGNING_KEY && env.REQUEST_SIGNING_KEY !== "cursed-genie-default-key") {
+      const result = verifyRequestSignature(
+        request.method,
+        request.url.split("?")[0],
+        JSON.stringify(request.body),
+        request.headers["x-request-timestamp"] as string | undefined,
+        request.headers["x-request-signature"] as string | undefined,
+        env.REQUEST_SIGNING_KEY,
+      );
+      if (!result.valid) {
+        request.log.warn(
+          { ip: request.ip, reason: result.reason },
+          "HMAC signature verification failed",
+        );
+        throw new AppError(
+          403,
+          "INVALID_SIGNATURE",
+          "The genie detects forgery. Your request has been rejected.",
+        );
+      }
+    }
+
+    if (env.TURNSTILE_SECRET_KEY) {
+      if (!turnstileToken) {
+        throw new AppError(
+          403,
+          "CAPTCHA_REQUIRED",
+          "The genie requires proof you're human. Nice try, bot.",
+        );
+      }
+      const isHuman = await verifyTurnstileToken(
+        turnstileToken,
+        env.TURNSTILE_SECRET_KEY,
+        request.ip,
+      );
+      if (!isHuman) {
+        throw new AppError(
+          403,
+          "CAPTCHA_FAILED",
+          "CAPTCHA verification failed. The genie doesn't serve machines.",
+        );
+      }
+    }
+
     moderateInput(wish);
 
-    // Generate cursed wish via Gemini
+    const teapotPattern =
+      /\b(tea|coffee|brew|teapot|espresso|latte|cappuccino|matcha|chai|kettle)\b/i;
+    if (teapotPattern.test(wish) || wish.trim() === "418") {
+      throw new TeapotError();
+    }
+
+    const ipHash = hashIp(request.ip);
+    const normalized = normalizePower(wish);
+
+    const seenIds = getWishIdsByIpAndPower(ipHash, normalized);
+    const sameSession = seenIds.length > 0;
+
+    if (!sameSession) {
+      const cached = findCachedWish(normalized, []);
+      if (cached) {
+        request.log.info(
+          { wish, cached: true, cachedId: cached.id },
+          "Serving cached wish (new session)",
+        );
+        const id = generateWishId();
+        const row = createWish({
+          id,
+          originalWish: wish,
+          normalizedPower: normalized,
+          cursedPower: cached.cursedPower,
+          butClause: cached.butClause,
+          explanation: cached.explanation,
+          uselessnessScore: cached.uselessnessScore,
+          category: cached.category,
+          isValid: true,
+          ipHash,
+          generationTimeMs: 0,
+        });
+        return reply.status(201).send(toWishResult(row));
+      }
+    }
+
     const startTime = Date.now();
     const geminiResult = await generateCursedWish(wish, env, request.log);
     const generationTimeMs = Date.now() - startTime;
 
     request.log.info(
-      { wish, generationTimeMs, isValid: geminiResult.isValidSuperpower },
-      "Wish generated",
+      {
+        wish,
+        generationTimeMs,
+        isValid: geminiResult.isValidSuperpower,
+        cached: false,
+      },
+      "Wish generated via AI",
     );
 
-    // Handle "not a superpower" classification
     if (!geminiResult.isValidSuperpower) {
       throw new NotASuperpowerError(
         geminiResult.rejectionReason ||
@@ -73,25 +177,24 @@ export const wishRoutes: FastifyPluginAsync = async (app) => {
       );
     }
 
-    // Persist
     const id = generateWishId();
     const row = createWish({
       id,
       originalWish: wish,
+      normalizedPower: normalized,
       cursedPower: geminiResult.cursedPower,
       butClause: geminiResult.butClause,
       explanation: geminiResult.explanation,
       uselessnessScore: geminiResult.uselessnessScore,
       category: geminiResult.category,
       isValid: true,
-      ipHash: hashIp(request.ip),
+      ipHash,
       generationTimeMs,
     });
 
     return reply.status(201).send(toWishResult(row));
   });
 
-  // GET /api/v1/wishes/:id — Fetch a wish by ID
   app.get<{ Params: { id: string } }>("/:id", async (request, reply) => {
     const { id } = request.params;
     const row = getWishById(id);
@@ -109,7 +212,6 @@ export const wishRoutes: FastifyPluginAsync = async (app) => {
     return toWishResult(row);
   });
 
-  // GET /api/v1/wishes — Gallery listing
   app.get(
     "/",
     async (
@@ -133,7 +235,6 @@ export const wishRoutes: FastifyPluginAsync = async (app) => {
     },
   );
 
-  // GET /api/v1/wishes/random — Random wish
   app.get("/random", async (_request, reply) => {
     const row = getRandomWish();
     if (!row) {
