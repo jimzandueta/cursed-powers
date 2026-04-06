@@ -5,7 +5,6 @@ import type { WishResult } from "@cursed-wishes/shared";
 import { createWish, WishApiError } from "../lib/api-client";
 
 export type Screen =
-  | "idle"
   | "rubbing"
   | "genie-revealed"
   | "input"
@@ -23,7 +22,6 @@ interface WishFlowState {
 }
 
 type WishFlowAction =
-  | { type: "START_RUB" }
   | { type: "UPDATE_RUB"; progress: number }
   | { type: "GENIE_REVEALED" }
   | { type: "SHOW_INPUT" }
@@ -35,7 +33,7 @@ type WishFlowAction =
   | { type: "RESET" };
 
 const initialState: WishFlowState = {
-  screen: "idle",
+  screen: "rubbing",
   rubProgress: 0,
   wishText: "",
   result: null,
@@ -45,8 +43,6 @@ const initialState: WishFlowState = {
 
 function reducer(state: WishFlowState, action: WishFlowAction): WishFlowState {
   switch (action.type) {
-    case "START_RUB":
-      return { ...state, screen: "rubbing", rubProgress: 0 };
     case "UPDATE_RUB":
       return { ...state, rubProgress: Math.min(1, action.progress) };
     case "GENIE_REVEALED":
@@ -84,7 +80,6 @@ function reducer(state: WishFlowState, action: WishFlowAction): WishFlowState {
 export function useWishFlow() {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const startRub = useCallback(() => dispatch({ type: "START_RUB" }), []);
   const updateRub = useCallback(
     (progress: number) => dispatch({ type: "UPDATE_RUB", progress }),
     [],
@@ -99,34 +94,36 @@ export function useWishFlow() {
     [],
   );
 
-  const submitWish = useCallback(async (wish: string) => {
-    dispatch({ type: "SUBMIT_WISH" });
-    try {
-      const result = await createWish(wish);
-      dispatch({ type: "WISH_SUCCESS", result });
-    } catch (err) {
-      if (err instanceof WishApiError) {
-        dispatch({
-          type: "WISH_ERROR",
-          code: err.code,
-          message: err.message,
-        });
-      } else {
-        dispatch({
-          type: "WISH_ERROR",
-          code: "NETWORK_ERROR",
-          message: "The genie's powers are disrupted. Try again.",
-        });
+  const submitWish = useCallback(
+    async (wish: string, turnstileToken?: string) => {
+      dispatch({ type: "SUBMIT_WISH" });
+      try {
+        const result = await createWish(wish, turnstileToken);
+        dispatch({ type: "WISH_SUCCESS", result });
+      } catch (err) {
+        if (err instanceof WishApiError) {
+          dispatch({
+            type: "WISH_ERROR",
+            code: err.code,
+            message: err.message,
+          });
+        } else {
+          dispatch({
+            type: "WISH_ERROR",
+            code: "NETWORK_ERROR",
+            message: "The genie's powers are disrupted. Try again.",
+          });
+        }
       }
-    }
-  }, []);
+    },
+    [],
+  );
 
   const retry = useCallback(() => dispatch({ type: "RETRY" }), []);
   const reset = useCallback(() => dispatch({ type: "RESET" }), []);
 
   return {
     state,
-    startRub,
     updateRub,
     revealGenie,
     showInput,

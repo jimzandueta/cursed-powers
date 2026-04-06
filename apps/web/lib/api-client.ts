@@ -1,12 +1,23 @@
 import type { WishResult, ApiError } from "@cursed-wishes/shared";
+import { signRequest } from "./request-signer";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
-export async function createWish(wish: string): Promise<WishResult> {
-  const res = await fetch(`${API_URL}/api/v1/wishes`, {
+export async function createWish(
+  wish: string,
+  turnstileToken?: string,
+): Promise<WishResult> {
+  const path = "/api/v1/wishes";
+  const body = JSON.stringify({ wish, turnstileToken });
+  const signatureHeaders = await signRequest("POST", path, body);
+
+  const res = await fetch(`${API_URL}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ wish }),
+    headers: {
+      "Content-Type": "application/json",
+      ...signatureHeaders,
+    },
+    body,
   });
 
   const data = await res.json();

@@ -1,10 +1,35 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface GenieProps {
   onRevealed: () => void;
+}
+
+// Pre-generate sparkle positions so they don't re-randomize on re-render
+function generateSparkles(count: number) {
+  return Array.from({ length: count }, (_, i) => ({
+    id: i,
+    left: `${10 + Math.random() * 80}%`,
+    top: `${15 + Math.random() * 70}%`,
+    delay: Math.random() * 3,
+    duration: 1.5 + Math.random() * 2,
+    size: 2 + Math.random() * 4,
+  }));
+}
+
+function generateSmokeParticles(count: number) {
+  return Array.from({ length: count }, (_, i) => ({
+    id: i,
+    left: `${25 + Math.random() * 50}%`,
+    startTop: `${60 + Math.random() * 25}%`,
+    delay: Math.random() * 2,
+    duration: 3 + Math.random() * 3,
+    size: 20 + Math.random() * 40,
+    opacity: 0.15 + Math.random() * 0.25,
+  }));
 }
 
 export function Genie({ onRevealed }: GenieProps) {
@@ -14,8 +39,10 @@ export function Genie({ onRevealed }: GenieProps) {
     "You have summoned me. What superpower do you desire, mortal?";
   const [displayedText, setDisplayedText] = useState("");
 
+  const sparkles = useMemo(() => generateSparkles(14), []);
+  const smokeParticles = useMemo(() => generateSmokeParticles(8), []);
+
   useEffect(() => {
-    // Start text typewriter after genie appears
     const showTimer = setTimeout(() => setShowText(true), 1200);
     return () => clearTimeout(showTimer);
   }, []);
@@ -30,7 +57,7 @@ export function Genie({ onRevealed }: GenieProps) {
       if (i >= message.length) {
         clearInterval(interval);
         setTextComplete(true);
-        setTimeout(onRevealed, 600);
+        setTimeout(onRevealed, 2500);
       }
     }, 40);
 
@@ -39,171 +66,152 @@ export function Genie({ onRevealed }: GenieProps) {
 
   return (
     <div className="flex flex-col items-center gap-6">
-      {/* Smoke burst */}
+      {/* Burst background glow */}
       <motion.div
         className="absolute inset-0 flex items-center justify-center pointer-events-none"
         initial={{ opacity: 0 }}
-        animate={{ opacity: [0, 0.8, 0.3] }}
+        animate={{ opacity: [0, 0.9, 0.4] }}
         transition={{ duration: 1.5, times: [0, 0.3, 1] }}
       >
-        <div className="w-80 h-80 rounded-full bg-gradient-radial from-teal-400/30 via-purple-500/10 to-transparent blur-3xl" />
+        <div
+          className="w-[500px] h-[500px] rounded-full blur-3xl"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(50,140,200,0.3) 0%, rgba(232,185,35,0.1) 40%, transparent 70%)",
+          }}
+        />
       </motion.div>
 
-      {/* Genie character */}
+      {/* Genie container with all effects */}
       <motion.div
         className="relative"
-        initial={{ scale: 0.3, opacity: 0, y: 50 }}
+        initial={{ scale: 0.2, opacity: 0, y: 60 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{
           type: "spring",
-          stiffness: 200,
-          damping: 20,
-          duration: 0.8,
+          stiffness: 180,
+          damping: 18,
+          duration: 1,
         }}
       >
-        <svg
-          width="160"
-          height="200"
-          viewBox="0 0 160 200"
-          className="drop-shadow-2xl"
-        >
-          {/* Smoke trail / lower body */}
-          <motion.path
-            d="M 60 200 Q 50 170 65 150 Q 80 130 80 120 Q 80 110 80 100"
-            stroke="url(#smokeGrad)"
-            strokeWidth="30"
-            fill="none"
-            strokeLinecap="round"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 0.6 }}
-            transition={{ duration: 1 }}
+        {/* Cloud / mystic background behind genie */}
+        <div className="absolute inset-0 -inset-x-16 -inset-y-8 pointer-events-none z-0">
+          {/* Layered cloud shapes */}
+          <motion.div
+            className="absolute top-[10%] left-[5%] w-48 h-32 rounded-full blur-2xl"
+            style={{ background: "rgba(100,160,220,0.12)" }}
+            animate={{ x: [0, 15, 0], opacity: [0.3, 0.5, 0.3] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
           />
-
-          {/* Body */}
-          <motion.ellipse
-            cx="80"
-            cy="100"
-            rx="35"
-            ry="30"
-            fill="url(#genieBody)"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.3, type: "spring" }}
+          <motion.div
+            className="absolute top-[5%] right-[8%] w-40 h-28 rounded-full blur-2xl"
+            style={{ background: "rgba(120,140,200,0.1)" }}
+            animate={{ x: [0, -12, 0], opacity: [0.25, 0.45, 0.25] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
           />
-
-          {/* Head */}
-          <motion.circle
-            cx="80"
-            cy="60"
-            r="25"
-            fill="url(#genieBody)"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.4, type: "spring" }}
+          <motion.div
+            className="absolute top-[25%] left-[15%] w-56 h-36 rounded-full blur-3xl"
+            style={{ background: "rgba(80,150,200,0.08)" }}
+            animate={{ y: [0, -8, 0], opacity: [0.2, 0.35, 0.2] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
           />
-
-          {/* Eyes - slightly bored/smug expression */}
-          <motion.g
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-          >
-            {/* Left eye */}
-            <ellipse cx="72" cy="57" rx="4" ry="3" fill="white" />
-            <circle cx="73" cy="57" r="2" fill="#1a0533" />
-            {/* Right eye */}
-            <ellipse cx="88" cy="57" rx="4" ry="3" fill="white" />
-            <circle cx="89" cy="57" r="2" fill="#1a0533" />
-            {/* Smug eyebrow */}
-            <path
-              d="M 65 50 Q 72 46 78 50"
-              stroke="white"
-              strokeWidth="1.5"
-              fill="none"
-            />
-            <path
-              d="M 82 50 Q 88 44 95 49"
-              stroke="white"
-              strokeWidth="1.5"
-              fill="none"
-            />
-            {/* Smirk */}
-            <path
-              d="M 72 68 Q 80 74 88 68"
-              stroke="white"
-              strokeWidth="1.5"
-              fill="none"
-            />
-          </motion.g>
-
-          {/* Arms crossed */}
-          <motion.g
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-          >
-            <path
-              d="M 45 95 Q 35 85 50 80"
-              stroke="url(#genieBody)"
-              strokeWidth="10"
-              fill="none"
-              strokeLinecap="round"
-            />
-            <path
-              d="M 115 95 Q 125 85 110 80"
-              stroke="url(#genieBody)"
-              strokeWidth="10"
-              fill="none"
-              strokeLinecap="round"
-            />
-          </motion.g>
-
-          {/* Turban / top of head */}
-          <motion.path
-            d="M 55 50 Q 60 25 80 20 Q 100 25 105 50"
-            fill="url(#turbanGold)"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.5, type: "spring" }}
+          <motion.div
+            className="absolute bottom-[20%] left-[20%] w-52 h-32 rounded-full blur-3xl"
+            style={{ background: "rgba(60,120,180,0.1)" }}
+            animate={{ x: [0, 10, 0], opacity: [0.2, 0.4, 0.2] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 2 }}
           />
-          <motion.circle
-            cx="80"
-            cy="22"
-            r="5"
-            fill="#f5c518"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.6, type: "spring" }}
-          />
+        </div>
 
-          <defs>
-            <linearGradient id="genieBody" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#6b21a8" />
-              <stop offset="50%" stopColor="#7c3aed" />
-              <stop offset="100%" stopColor="#6b21a8" />
-            </linearGradient>
-            <linearGradient id="smokeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#7c3aed" />
-              <stop offset="100%" stopColor="transparent" />
-            </linearGradient>
-            <linearGradient id="turbanGold" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#f5c518" />
-              <stop offset="100%" stopColor="#d4a017" />
-            </linearGradient>
-          </defs>
-        </svg>
+        {/* Animated smoke wisps in foreground */}
+        <div className="absolute inset-0 -inset-x-8 pointer-events-none z-20 overflow-hidden">
+          {smokeParticles.map((p) => (
+            <motion.div
+              key={p.id}
+              className="absolute rounded-full blur-xl"
+              style={{
+                left: p.left,
+                top: p.startTop,
+                width: p.size,
+                height: p.size,
+                background: `radial-gradient(circle, rgba(180,220,255,${p.opacity}) 0%, transparent 70%)`,
+              }}
+              animate={{
+                y: [0, -80, -160],
+                x: [0, (p.id % 2 === 0 ? 20 : -20), 0],
+                opacity: [0, p.opacity, 0],
+                scale: [0.5, 1.3, 0.8],
+              }}
+              transition={{
+                duration: p.duration,
+                repeat: Infinity,
+                delay: p.delay,
+                ease: "easeOut",
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Glowing sparkle particles in foreground */}
+        <div className="absolute inset-0 -inset-x-12 -inset-y-4 pointer-events-none z-30">
+          {sparkles.map((sp) => (
+            <motion.div
+              key={sp.id}
+              className="absolute rounded-full"
+              style={{
+                left: sp.left,
+                top: sp.top,
+                width: sp.size,
+                height: sp.size,
+                background: "radial-gradient(circle, rgba(255,230,130,0.9) 0%, rgba(255,200,50,0.4) 50%, transparent 100%)",
+                boxShadow: `0 0 ${sp.size * 2}px rgba(255,220,100,0.4)`,
+              }}
+              animate={{
+                opacity: [0, 1, 0],
+                scale: [0, 1.3, 0],
+                y: [0, -10, 0],
+              }}
+              transition={{
+                duration: sp.duration,
+                repeat: Infinity,
+                delay: sp.delay,
+                ease: "easeInOut",
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Genie image */}
+        <Image
+          src="/images/genie.png"
+          alt="Cursed Genie"
+          width={320}
+          height={520}
+          className="relative z-10 drop-shadow-[0_0_30px_rgba(50,150,220,0.3)]"
+          priority
+          draggable={false}
+        />
       </motion.div>
 
-      {/* Speech bubble with typewriter text */}
+      {/* Speech bubble */}
       <AnimatePresence>
         {showText && (
           <motion.div
-            className="max-w-md mx-auto px-6 py-4 bg-mystic-800/80 border border-gold-400/30 rounded-2xl backdrop-blur-sm"
+            className="max-w-md mx-auto px-7 py-5 bg-mystic-800/80 border border-gold-400/20 rounded-2xl backdrop-blur-sm relative"
+            style={{
+              boxShadow:
+                "0 0 30px rgba(232,185,35,0.08), inset 0 0 20px rgba(50,150,220,0.05)",
+            }}
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
           >
-            <p className="font-display text-center text-gold-300 text-lg leading-relaxed">
+            <div className="absolute top-2 left-3 w-4 h-4 border-t border-l border-gold-400/20 rounded-tl-sm" />
+            <div className="absolute top-2 right-3 w-4 h-4 border-t border-r border-gold-400/20 rounded-tr-sm" />
+            <div className="absolute bottom-2 left-3 w-4 h-4 border-b border-l border-gold-400/20 rounded-bl-sm" />
+            <div className="absolute bottom-2 right-3 w-4 h-4 border-b border-r border-gold-400/20 rounded-br-sm" />
+
+            <p className="font-display text-center text-gold-300 text-lg leading-relaxed italic tracking-wide">
               {displayedText}
               {!textComplete && (
                 <motion.span

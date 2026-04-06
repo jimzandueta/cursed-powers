@@ -9,12 +9,12 @@ function pick<T>(arr: T[]): T {
 }
 
 function getScoreVerdict(score: number): { label: string; emoji: string; color: string } {
-  if (score >= 97) return { label: "Cosmically Betrayed", emoji: "💀", color: "text-red-400" };
-  if (score >= 93) return { label: "Hilariously Useless", emoji: "😭", color: "text-red-400" };
-  if (score >= 88) return { label: "Impressively Pointless", emoji: "🤡", color: "text-ember" };
-  if (score >= 82) return { label: "Technically a Superpower", emoji: "😐", color: "text-gold-400" };
-  if (score >= 76) return { label: "Almost Useful (But No)", emoji: "🫠", color: "text-gold-300" };
-  return { label: "Suspiciously Decent", emoji: "🤨", color: "text-green-400" };
+  if (score >= 97) return { label: "You're Worse Off Than Before", emoji: "💀", color: "text-red-400" };
+  if (score >= 93) return { label: "Completely Useless", emoji: "😭", color: "text-red-400" };
+  if (score >= 88) return { label: "Barely a Superpower", emoji: "🤡", color: "text-ember" };
+  if (score >= 82) return { label: "Technically Counts", emoji: "😐", color: "text-gold-400" };
+  if (score >= 76) return { label: "Could Be Worse", emoji: "🫠", color: "text-gold-300" };
+  return { label: "The Genie Messed Up", emoji: "🤨", color: "text-green-400" };
 }
 
 const COMMENTS: Record<string, string[]> = {
@@ -135,9 +135,17 @@ export function WishResult({ result, onRetry }: WishResultProps) {
       transition={{ type: "spring", stiffness: 200, damping: 20 }}
     >
       {/* Result card */}
-      <div className="bg-mystic-800/60 border border-gold-400/30 rounded-2xl p-8 backdrop-blur-sm">
+      <div className="bg-mystic-800/50 border border-gold-400/15 rounded-2xl p-8 backdrop-blur-sm relative overflow-hidden"
+        style={{ boxShadow: "0 0 40px rgba(124,58,237,0.06), inset 0 0 30px rgba(0,0,0,0.3)" }}
+      >
+        {/* Decorative corner accents */}
+        <div className="absolute top-3 left-4 w-5 h-5 border-t border-l border-gold-400/15 rounded-tl-sm" />
+        <div className="absolute top-3 right-4 w-5 h-5 border-t border-r border-gold-400/15 rounded-tr-sm" />
+        <div className="absolute bottom-3 left-4 w-5 h-5 border-b border-l border-gold-400/15 rounded-bl-sm" />
+        <div className="absolute bottom-3 right-4 w-5 h-5 border-b border-r border-gold-400/15 rounded-br-sm" />
+
         {/* Original wish - crossed out */}
-        <p className="text-white/40 text-sm line-through mb-2">
+        <p className="text-white/30 text-sm line-through mb-3 italic">
           You wished for: {result.originalWish}
         </p>
 
@@ -179,7 +187,7 @@ export function WishResult({ result, onRetry }: WishResultProps) {
         {/* Uselessness verdict */}
         {showScore && (
           <motion.div
-            className="mt-6 pt-4 border-t border-white/10"
+            className="mt-6 pt-4 border-t border-white/5"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
           >
@@ -213,7 +221,7 @@ export function WishResult({ result, onRetry }: WishResultProps) {
         <motion.button
           onClick={onRetry}
           className="px-6 py-3 bg-gradient-to-r from-gold-400 to-ember
-                     text-mystic-900 font-display font-bold tracking-wide
+                     text-mystic-900 font-display font-bold tracking-wider
                      rounded-xl glow-gold hover:glow-gold-strong hover:scale-[1.02]
                      transition-all duration-200"
           whileTap={{ scale: 0.98 }}
@@ -226,9 +234,9 @@ export function WishResult({ result, onRetry }: WishResultProps) {
             const text = `I wished for "${result.originalWish}" and got: ${result.cursedPower}\n\n${result.explanation}\n\nUselessness: ${result.uselessnessScore}%`;
             navigator.clipboard?.writeText(text);
           }}
-          className="px-6 py-3 border border-gold-400/30 text-gold-400
-                     font-display tracking-wide rounded-xl
-                     hover:bg-gold-400/10 transition-all duration-200"
+          className="px-6 py-3 border border-gold-400/20 text-gold-400/80
+                     font-display tracking-wider rounded-xl
+                     hover:bg-gold-400/5 hover:border-gold-400/40 hover:text-gold-400 transition-all duration-200"
           whileTap={{ scale: 0.98 }}
         >
           Copy

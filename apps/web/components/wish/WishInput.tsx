@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { WISH_MAX_LENGTH, WISH_MIN_LENGTH } from "@cursed-wishes/shared";
 
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
+
 interface WishInputProps {
-  onSubmit: (wish: string) => void;
+  onSubmit: (wish: string, turnstileToken?: string) => void;
   error: { code: string; message: string } | null;
   isLoading?: boolean;
 }
@@ -13,9 +16,10 @@ interface WishInputProps {
 export function WishInput({ onSubmit, error, isLoading }: WishInputProps) {
   const [wish, setWish] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | undefined>();
+  const turnstileRef = useRef<TurnstileInstance | null>(null);
 
   const charCount = wish.trim().length;
-  const isValid = charCount >= WISH_MIN_LENGTH && charCount <= WISH_MAX_LENGTH;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,7 +36,11 @@ export function WishInput({ onSubmit, error, isLoading }: WishInputProps) {
     }
 
     setLocalError(null);
-    onSubmit(trimmed);
+    onSubmit(trimmed, turnstileToken);
+
+    // Reset Turnstile for next submission
+    turnstileRef.current?.reset();
+    setTurnstileToken(undefined);
   }
 
   const displayError = localError || (error ? error.message : null);
@@ -47,6 +55,16 @@ export function WishInput({ onSubmit, error, isLoading }: WishInputProps) {
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
     >
       <div className="relative">
+        {/* Honeypot field — invisible to humans, auto-filled by bots */}
+        <input
+          type="text"
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0, width: 0 }}
+          onChange={() => {}}
+        />
         <motion.input
           type="text"
           value={wish}
@@ -57,10 +75,13 @@ export function WishInput({ onSubmit, error, isLoading }: WishInputProps) {
           placeholder="I wish for..."
           maxLength={WISH_MAX_LENGTH}
           autoFocus
-          className="w-full px-5 py-4 bg-mystic-800/60 border-2 border-gold-400/40 rounded-xl
-                     text-white text-lg placeholder:text-white/30
-                     focus:outline-none focus:border-gold-400/80 focus:glow-gold
-                     transition-all duration-200"
+          className="w-full px-6 py-4 bg-mystic-800/50 border border-gold-400/25 rounded-xl
+                     text-white text-lg font-display tracking-wide placeholder:text-white/25 placeholder:italic
+                     focus:outline-none focus:border-gold-400/60 focus:glow-gold
+                     transition-all duration-300"
+          style={{
+            boxShadow: "inset 0 2px 8px rgba(0,0,0,0.3)"
+          }}
           animate={showShake ? { x: [0, -8, 8, -4, 4, 0] } : {}}
           transition={{ duration: 0.4 }}
         />
@@ -89,15 +110,27 @@ export function WishInput({ onSubmit, error, isLoading }: WishInputProps) {
         )}
       </AnimatePresence>
 
+      {/* Cloudflare Turnstile — invisible CAPTCHA */}
+      {TURNSTILE_SITE_KEY && (
+        <Turnstile
+          ref={turnstileRef}
+          siteKey={TURNSTILE_SITE_KEY}
+          onSuccess={setTurnstileToken}
+          onError={() => setTurnstileToken(undefined)}
+          onExpire={() => setTurnstileToken(undefined)}
+          options={{ theme: "dark", size: "invisible" }}
+        />
+      )}
+
       {/* Submit button */}
       <motion.button
         type="submit"
         disabled={isLoading || !wish.trim()}
         className="px-8 py-4 bg-gradient-to-r from-gold-400 to-ember
-                   text-mystic-900 font-display font-bold text-lg tracking-wide
+                   text-mystic-900 font-display font-bold text-lg tracking-wider
                    rounded-xl glow-gold
                    hover:glow-gold-strong hover:scale-[1.02]
-                   disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100
+                   disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100
                    transition-all duration-200"
         whileTap={{ scale: 0.98 }}
       >
