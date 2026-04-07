@@ -1,5 +1,8 @@
 import type { NextConfig } from "next";
 
+const publicApiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+const apiInternalUrl = process.env.API_INTERNAL_URL || "";
+
 const securityHeaders = [
   { key: "X-DNS-Prefetch-Control", value: "on" },
   {
@@ -23,11 +26,8 @@ const securityHeaders = [
       "frame-src https://challenges.cloudflare.com",
       process.env.NODE_ENV === "development"
         ? "connect-src 'self' http: https:"
-        : "connect-src 'self' https://challenges.cloudflare.com " +
-            (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"),
-      "report-uri " +
-        (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001") +
-        "/api/v1/csp-report",
+        : "connect-src 'self' https://challenges.cloudflare.com " + publicApiUrl,
+      "report-uri /api/v1/csp-report",
     ].join("; "),
   },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
@@ -40,6 +40,18 @@ const nextConfig: NextConfig = {
   output: "standalone",
   transpilePackages: ["@cursed-wishes/shared"],
   poweredByHeader: false,
+  async rewrites() {
+    if (!apiInternalUrl) {
+      return [];
+    }
+
+    return [
+      {
+        source: "/api/v1/:path*",
+        destination: `${apiInternalUrl}/api/v1/:path*`,
+      },
+    ];
+  },
   async headers() {
     return [
       {

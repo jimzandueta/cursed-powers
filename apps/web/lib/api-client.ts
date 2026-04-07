@@ -2,11 +2,10 @@ import type { WishResult, ApiError } from "@cursed-wishes/shared";
 import { signRequest } from "./request-signer";
 
 function getApiUrl(): string {
-  const fallback = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+  const fallback = process.env.NEXT_PUBLIC_API_URL || "";
   if (typeof window === "undefined") return fallback;
-  // In the browser, use the current hostname so LAN / IP access works
-  const port = new URL(fallback).port || "3001";
-  return `${window.location.protocol}//${window.location.hostname}:${port}`;
+  // In the browser, use same-origin and let Next rewrites proxy to the API.
+  return "";
 }
 
 const API_URL = getApiUrl();

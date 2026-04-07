@@ -31,7 +31,7 @@ function makeEnv(): Env {
     RATE_LIMIT_MAX: 1000,
     RATE_LIMIT_WINDOW_MS: 60000,
     TURNSTILE_SECRET_KEY: "",
-    REQUEST_SIGNING_KEY: "cursed-genie-default-key",
+    REQUEST_SIGNING_KEY: "",
   } as Env;
 }
 

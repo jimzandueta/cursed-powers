@@ -27,7 +27,7 @@ describe("loadEnv", () => {
     expect(env.RATE_LIMIT_MAX).toBe(50);
     expect(env.RATE_LIMIT_WINDOW_MS).toBe(14_400_000);
     expect(env.TURNSTILE_SECRET_KEY).toBe("");
-    expect(env.REQUEST_SIGNING_KEY).toBe("cursed-genie-default-key");
+    expect(env.REQUEST_SIGNING_KEY).toBe("");
   });
 
   it("parses custom values", () => {

@@ -73,7 +73,7 @@ export const wishRoutes: FastifyPluginAsync = async (app) => {
       );
     }
 
-    if (env.REQUEST_SIGNING_KEY && env.REQUEST_SIGNING_KEY !== "cursed-genie-default-key") {
+    if (env.REQUEST_SIGNING_KEY) {
       const result = verifyRequestSignature(
         request.method,
         request.url.split("?")[0],

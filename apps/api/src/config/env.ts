@@ -14,7 +14,7 @@ const envSchema = z
     RATE_LIMIT_MAX: z.coerce.number().default(50),
     RATE_LIMIT_WINDOW_MS: z.coerce.number().default(14_400_000),
     TURNSTILE_SECRET_KEY: z.string().optional().default(""),
-    REQUEST_SIGNING_KEY: z.string().optional().default("cursed-genie-default-key"),
+    REQUEST_SIGNING_KEY: z.string().optional().default(""),
     TRUST_PROXY: z
       .enum(["true", "false"])
       .default("false")
@@ -27,7 +27,10 @@ const envSchema = z
 export type Env = z.infer<typeof envSchema>;
 
 export function loadEnv(): Env {
-  const result = envSchema.safeParse(process.env);
+  const result = envSchema.safeParse({
+    ...process.env,
+    PORT: process.env.API_PORT || process.env.PORT,
+  });
   if (!result.success) {
     console.error("❌ Invalid environment variables:");
     console.error(result.error.flatten().fieldErrors);

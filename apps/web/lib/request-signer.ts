@@ -1,5 +1,5 @@
 const SIGNING_KEY =
-  process.env.NEXT_PUBLIC_REQUEST_SIGNING_KEY || "cursed-genie-default-key";
+  process.env.NEXT_PUBLIC_REQUEST_SIGNING_KEY || "";
 
 async function hmacSha256(key: string, message: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -32,7 +32,8 @@ export async function signRequest(
   method: string,
   path: string,
   body?: string,
-): Promise<{ "X-Request-Timestamp": string; "X-Request-Signature": string }> {
+): Promise<Record<string, string>> {
+  if (!SIGNING_KEY) return {};
   const timestamp = Math.floor(Date.now() / 1000).toString();
   const bodyHash = body ? await sha256(body) : "";
   const message = `${timestamp}.${method.toUpperCase()}.${path}.${bodyHash}`;
