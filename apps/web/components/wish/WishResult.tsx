@@ -189,7 +189,7 @@ export function WishResult({ result, onRetry }: WishResultProps) {
             className="font-display text-sm leading-relaxed italic invisible select-none"
             aria-hidden="true"
           >
-            "{result.explanation}"
+            &ldquo;{result.explanation}&rdquo;
           </p>
           <motion.p
             className="font-display text-white/60 text-sm leading-relaxed italic absolute inset-0"
@@ -197,7 +197,7 @@ export function WishResult({ result, onRetry }: WishResultProps) {
             animate={{ opacity: 1 }}
             transition={{ delay: 1.5 }}
           >
-            "{result.explanation}"
+            &ldquo;{result.explanation}&rdquo;
           </motion.p>
         </div>
 

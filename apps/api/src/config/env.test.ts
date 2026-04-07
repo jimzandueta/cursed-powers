@@ -90,6 +90,9 @@ describe("loadEnv", () => {
   it("defaults GEMINI_API_KEY and OPENAI_API_KEY to empty string", () => {
     // Need at least one — but both default to ""
     // This should trigger the refinement failure
+    delete process.env.GEMINI_API_KEY;
+    delete process.env.OPENAI_API_KEY;
+
     const exitSpy = vi
       .spyOn(process, "exit")
       .mockImplementation(() => undefined as never);

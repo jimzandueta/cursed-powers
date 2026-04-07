@@ -334,7 +334,7 @@ export default function Home() {
           </a>
           {" · "}
           <a
-            href="https://github.com/jimzandueta/genie"
+            href="https://github.com/jimzandueta/cursed-powers"
             target="_blank"
             rel="noopener noreferrer"
             className="text-gold-400/30 hover:text-gold-400/60 transition-colors"
