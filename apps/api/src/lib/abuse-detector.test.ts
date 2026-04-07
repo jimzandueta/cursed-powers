@@ -14,6 +14,10 @@ describe("AbuseDetector", () => {
     });
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("allows normal requests", () => {
     const result = detector.recordRequest("1.2.3.4", "flight", {
       userAgent: "Mozilla/5.0",
@@ -113,6 +117,57 @@ describe("AbuseDetector", () => {
     smallDetector.recordRequest("3.3.3.3", "flight", headers);
 
     expect(smallDetector.trackedIpCount).toBeLessThanOrEqual(3);
+  });
+
+  it("decays score after interval elapsed", () => {
+    vi.useFakeTimers();
+    const decayDetector = new AbuseDetector({
+      rapidThreshold: 100,
+      rapidWindowMs: 10_000,
+      blockThreshold: 100,
+      decayIntervalMs: 10_000,
+    });
+
+    const headers = {};
+    decayDetector.recordRequest("1.2.3.4", "flight", headers);
+    const boosted = decayDetector.recordRequest("1.2.3.4", "flight", headers);
+    expect(boosted.score).toBe(6);
+
+    vi.advanceTimersByTime(10_000);
+
+    const decayed = decayDetector.recordRequest("1.2.3.4", "speed", {
+      userAgent: "Mozilla/5.0",
+      accept: "application/json",
+    });
+
+    expect(decayed.score).toBeLessThan(6);
+  });
+
+  it("evicts oldest tracked ip when capacity exceeded", () => {
+    const smallDetector = new AbuseDetector({ maxTrackedIps: 1 });
+    const headers = { userAgent: "Mozilla/5.0", accept: "application/json" };
+
+    smallDetector.recordRequest("1.1.1.1", "flight", headers);
+    expect(smallDetector.trackedIpCount).toBe(1);
+
+    smallDetector.recordRequest("2.2.2.2", "speed", headers);
+    smallDetector.recordRequest("3.3.3.3", "strength", headers);
+    expect(smallDetector.trackedIpCount).toBe(2);
+  });
+
+  it("trims stored wish hashes after 20 entries", () => {
+    const trimDetector = new AbuseDetector({
+      rapidThreshold: 100,
+      blockThreshold: 10_000,
+    });
+    const headers = { userAgent: "Mozilla/5.0", accept: "application/json" };
+
+    for (let i = 0; i < 25; i++) {
+      trimDetector.recordRequest("1.2.3.4", `wish-${i}`, headers);
+    }
+
+    const result = trimDetector.recordRequest("1.2.3.4", "wish-24", headers);
+    expect(result.score).toBeGreaterThanOrEqual(2);
   });
 
   it("resets all state", () => {

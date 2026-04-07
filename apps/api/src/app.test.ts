@@ -132,6 +132,68 @@ describe("buildApp", () => {
     expect(res.headers["access-control-allow-origin"]).toBeDefined();
   });
 
+  it("supports comma-separated CORS origins", async () => {
+    const listApp = await buildApp(
+      makeEnv({ CORS_ORIGIN: "https://one.example, https://two.example" }),
+    );
+
+    const res = await listApp.inject({
+      method: "OPTIONS",
+      url: "/api/v1/health",
+      headers: {
+        origin: "https://two.example",
+        "access-control-request-method": "GET",
+      },
+    });
+
+    expect(res.statusCode).toBe(204);
+    expect(res.headers["access-control-allow-origin"]).toBe("https://two.example");
+    await listApp.close();
+  });
+
+  it("handles CSP report endpoint", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/v1/csp-report",
+      payload: {
+        "csp-report": {
+          "violated-directive": "script-src",
+          "blocked-uri": "http://malicious.example",
+        },
+      },
+    });
+
+    expect(res.statusCode).toBe(204);
+  });
+
+  it("handles CSP report payload without csp-report wrapper", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/v1/csp-report",
+      payload: {
+        blocked: "http://example.test/script.js",
+      },
+    });
+
+    expect(res.statusCode).toBe(204);
+  });
+
+  it("returns 429 when abuse detector blocks wish spam", async () => {
+    let blockedStatus = 200;
+
+    for (let i = 0; i < 10; i++) {
+      const res = await app.inject({
+        method: "POST",
+        url: "/api/v1/wishes",
+        payload: { wish: `flight ${i}` },
+      });
+      blockedStatus = res.statusCode;
+      if (blockedStatus === 429) break;
+    }
+
+    expect(blockedStatus).toBe(429);
+  });
+
   it("applies security headers from helmet", async () => {
     const res = await app.inject({ method: "GET", url: "/api/v1/health" });
     expect(res.headers["x-content-type-options"]).toBe("nosniff");

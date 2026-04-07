@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { rmSync } from "node:fs";
+import { createHash, createHmac } from "node:crypto";
 import { buildApp } from "../../app.js";
 import { initDb, closeDb } from "../../db/index.js";
 import type { Env } from "../../config/env.js";
@@ -19,7 +20,19 @@ vi.mock("../../services/gemini/gemini.service.js", () => ({
 
 const testDbPath = "./data/test-routes.db";
 
-function makeEnv(): Env {
+function makeSignature(
+  method: string,
+  path: string,
+  body: string,
+  timestamp: string,
+  secret: string,
+): string {
+  const bodyHash = createHash("sha256").update(body).digest("hex");
+  const message = `${timestamp}.${method.toUpperCase()}.${path}.${bodyHash}`;
+  return createHmac("sha256", secret).update(message).digest("hex");
+}
+
+function makeEnv(overrides: Partial<Env> = {}): Env {
   return {
     PORT: 3001,
     NODE_ENV: "test",
@@ -32,6 +45,7 @@ function makeEnv(): Env {
     RATE_LIMIT_WINDOW_MS: 60000,
     TURNSTILE_SECRET_KEY: "",
     REQUEST_SIGNING_KEY: "",
+    ...overrides,
   } as Env;
 }
 
@@ -231,6 +245,31 @@ describe("wish routes", () => {
       expect(res.statusCode).toBe(400);
     });
 
+    it("rejects honeypot-triggered bot requests", async () => {
+      const shared = await import("@cursed-wishes/shared");
+      const parseSpy = vi
+        .spyOn(shared.CreateWishSchema, "safeParse")
+        .mockReturnValueOnce({
+          success: true,
+          data: {
+            wish: "flight",
+            turnstileToken: undefined,
+            website: "bot-filled",
+          },
+        } as any);
+
+      const res = await app.inject({
+        method: "POST",
+        url: "/api/v1/wishes",
+        payload: { wish: "flight" },
+      });
+
+      expect(res.statusCode).toBe(403);
+      const body = JSON.parse(res.body);
+      expect(body.error.code).toBe("BOT_DETECTED");
+      parseSpy.mockRestore();
+    });
+
     it("handles teapot related keywords", async () => {
       const keywords = [
         "tea",
@@ -280,6 +319,99 @@ describe("wish routes", () => {
       expect(res.statusCode).toBe(422);
       const body = JSON.parse(res.body);
       expect(body.error.message).toContain("not a superpower");
+    });
+
+    it("rejects requests with invalid HMAC signature when signing is enabled", async () => {
+      const secureApp = await buildApp(
+        makeEnv({ REQUEST_SIGNING_KEY: "super-secret" } as Partial<Env>),
+      );
+
+      const body = JSON.stringify({ wish: "flight" });
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+
+      const res = await secureApp.inject({
+        method: "POST",
+        url: "/api/v1/wishes",
+        headers: {
+          "content-type": "application/json",
+          "x-request-timestamp": timestamp,
+          "x-request-signature": "deadbeef",
+        },
+        payload: JSON.parse(body),
+      });
+
+      expect(res.statusCode).toBe(403);
+      const parsed = JSON.parse(res.body);
+      expect(parsed.error.code).toBe("INVALID_SIGNATURE");
+      await secureApp.close();
+    });
+
+    it("accepts valid HMAC signature when signing is enabled", async () => {
+      const secret = "super-secret";
+      const secureApp = await buildApp(
+        makeEnv({ REQUEST_SIGNING_KEY: secret } as Partial<Env>),
+      );
+
+      const body = JSON.stringify({ wish: "flight" });
+      const timestamp = Math.floor(Date.now() / 1000).toString();
+      const signature = makeSignature(
+        "POST",
+        "/api/v1/wishes",
+        body,
+        timestamp,
+        secret,
+      );
+
+      const res = await secureApp.inject({
+        method: "POST",
+        url: "/api/v1/wishes",
+        headers: {
+          "content-type": "application/json",
+          "x-request-timestamp": timestamp,
+          "x-request-signature": signature,
+        },
+        payload: JSON.parse(body),
+      });
+
+      expect(res.statusCode).toBe(201);
+      await secureApp.close();
+    });
+
+    it("requires Turnstile token when captcha is enabled", async () => {
+      const captchaApp = await buildApp(
+        makeEnv({ TURNSTILE_SECRET_KEY: "turnstile-secret" } as Partial<Env>),
+      );
+
+      const res = await captchaApp.inject({
+        method: "POST",
+        url: "/api/v1/wishes",
+        payload: { wish: "flight" },
+      });
+
+      expect(res.statusCode).toBe(403);
+      const parsed = JSON.parse(res.body);
+      expect(parsed.error.code).toBe("CAPTCHA_REQUIRED");
+      await captchaApp.close();
+    });
+
+    it("rejects invalid Turnstile token when captcha is enabled", async () => {
+      const turnstile = await import("../../lib/turnstile.js");
+      vi.spyOn(turnstile, "verifyTurnstileToken").mockResolvedValueOnce(false);
+
+      const captchaApp = await buildApp(
+        makeEnv({ TURNSTILE_SECRET_KEY: "turnstile-secret" } as Partial<Env>),
+      );
+
+      const res = await captchaApp.inject({
+        method: "POST",
+        url: "/api/v1/wishes",
+        payload: { wish: "flight", turnstileToken: "bad-token" },
+      });
+
+      expect(res.statusCode).toBe(403);
+      const parsed = JSON.parse(res.body);
+      expect(parsed.error.code).toBe("CAPTCHA_FAILED");
+      await captchaApp.close();
     });
   });
 

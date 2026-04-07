@@ -171,4 +171,16 @@ describe("generateCursedWish", () => {
     expect(result.isValidSuperpower).toBe(false);
     expect(result.rejectionReason).toBe("That's not a power, mortal.");
   });
+
+  it("defaults provider path safely when both API keys are empty", async () => {
+    mockGenerateContent.mockResolvedValueOnce({
+      response: { text: () => JSON.stringify(validResponse) },
+    });
+
+    const { generateCursedWish } = await import("./gemini.service.js");
+    const env = makeEnv({ GEMINI_API_KEY: "", OPENAI_API_KEY: "" });
+    const result = await generateCursedWish("flight", env, logger);
+
+    expect(result.isValidSuperpower).toBe(true);
+  });
 });

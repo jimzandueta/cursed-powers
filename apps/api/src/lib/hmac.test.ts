@@ -161,4 +161,41 @@ describe("verifyRequestSignature", () => {
     );
     expect(result.valid).toBe(true);
   });
+
+  it("rejects signature when hex length differs", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-01T00:00:00Z"));
+    const now = Math.floor(Date.now() / 1000).toString();
+
+    const result = verifyRequestSignature(
+      "POST",
+      "/api/v1/wishes",
+      "{}",
+      now,
+      "abcd",
+      secret,
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.reason).toBe("Invalid signature");
+  });
+
+  it("rejects signature when non-hex bytes produce different buffer size", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-01T00:00:00Z"));
+    const now = Math.floor(Date.now() / 1000).toString();
+    const badHex = "z".repeat(64);
+
+    const result = verifyRequestSignature(
+      "POST",
+      "/api/v1/wishes",
+      "{}",
+      now,
+      badHex,
+      secret,
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.reason).toBe("Invalid signature");
+  });
 });

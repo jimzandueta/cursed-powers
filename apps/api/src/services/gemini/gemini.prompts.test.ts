@@ -40,6 +40,15 @@ describe("buildUserPrompt", () => {
     const prompt = buildUserPrompt("test");
     expect(prompt).toContain("JSON");
   });
+
+  it("includes recent categories when provided", () => {
+    const prompt = buildUserPrompt("flight", [
+      "Technically True",
+      "Cosmically Unfair",
+    ]);
+    expect(prompt).toContain("Avoid these recently used categories");
+    expect(prompt).toContain('"Technically True"');
+  });
 });
 
 describe("STRICT_RETRY_SUFFIX", () => {
