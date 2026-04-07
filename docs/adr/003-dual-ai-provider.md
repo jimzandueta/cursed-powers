@@ -19,24 +19,24 @@ Combined availability with independent failover: 1 - (0.001 × 0.005) = 99.9999%
 
 ## Decision
 
-We will implement a **dual AI provider architecture** with Google Gemini 2.5 Flash as the primary provider and OpenAI GPT-4o-mini as the secondary fallback.
+We will implement a **dual AI provider architecture** with Google Gemini 2.5 Pro as the primary provider and OpenAI GPT-4.1-mini as the secondary.
 
 Both providers:
 
 - Share an identical system prompt (maintained in a single source of truth)
 - Use structured output (JSON schema) for consistent response formatting
-- Are wrapped in a circuit breaker pattern (see ADR-008) for fault isolation
+- Expose circuit breaker metrics via the health endpoint (see ADR-008)
 
 The provider selection logic:
 
-1. Attempt generation with Gemini (lower cost, faster response)
-2. If Gemini fails or circuit breaker is OPEN, fall through to OpenAI
-3. If both fail, return a graceful error with retry guidance
+1. Select provider based on configured API key (Gemini preferred if both set)
+2. Attempt generation with selected provider (up to 2 tries with stricter retry prompt)
+3. If both attempts fail, return a random pre-written fallback wish
 
 ## Rationale
 
 - **Five-nines availability** for a service that generates useless superpowers is exactly the kind of engineering rigor this platform demands.
-- **Cost optimization**: Gemini 2.5 Flash is significantly cheaper per token than GPT-4o-mini. Using it as primary reduces operational costs while maintaining quality.
+- **Cost optimization**: Gemini 2.5 Pro is significantly cheaper per token than GPT-4.1-mini. Using it as primary reduces operational costs while maintaining quality.
 - **Model diversity**: Different models produce different curse styles, increasing output variety for repeated wishes.
 - **No vendor lock-in**: The shared prompt interface means providers can be swapped or added with minimal code changes.
 
@@ -46,8 +46,8 @@ The provider selection logic:
 
 - Near-zero downtime for AI generation capability
 - Cost-optimized by routing to cheaper provider first
-- Circuit breaker prevents cascading failures during provider outages
-- A/B testing capability built into the architecture
+- Health endpoint exposes circuit breaker metrics for monitoring
+- Hardcoded fallback wishes ensure graceful degradation even when both providers fail
 
 ### Negative
 

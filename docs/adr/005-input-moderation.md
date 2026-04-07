@@ -24,13 +24,13 @@ We will implement a **three-stage moderation pipeline**:
 - Zod schema validation for structure and length constraints
 - Maximum wish length: 200 characters
 - Minimum wish length: 2 characters
-- Character allowlist: alphanumeric, spaces, basic punctuation
+- Honeypot field (`website`) must be empty (anti-bot)
 
 ### Stage 2: Content Moderation (Synchronous)
 
-- OpenAI Moderation API for input classification
-- Categories checked: hate, violence, self-harm, sexual content
-- Threshold: Any category flag triggers rejection
+- Regex-based pattern matching for dangerous content
+- Prompt injection detection: blocks system prompt manipulation, ignore instructions, etc.
+- Disallowed content filtering: violence, explicit terms, slurs
 - Themed rejection message: "The genie refuses to grant that wish."
 
 ### Stage 3: Output Validation (Post-Generation)
@@ -43,7 +43,7 @@ We will implement a **three-stage moderation pipeline**:
 
 - **Defense in depth**: Multiple layers catch different types of problematic content
 - **User experience**: Validation errors are returned immediately, before expensive AI calls
-- **Content policy compliance**: OpenAI's moderation API is industry-standard and free to use
+- **Content policy compliance**: Regex-based moderation runs in-process with zero external dependencies
 - **Structured output**: Zod schemas ensure AI responses are well-formed before database insertion
 
 ## Consequences
@@ -57,11 +57,11 @@ We will implement a **three-stage moderation pipeline**:
 
 ### Negative
 
-- Additional latency from moderation API call (~100-200ms)
-- False positives may block legitimate wishes (mitigated: generous thresholds)
-- OpenAI Moderation API dependency even when using Gemini as primary provider
+- Additional patterns must be maintained as new threats emerge
+- False positives may block legitimate wishes (mitigated: patterns target specific harmful content)
+- No external dependency for moderation (simpler but less comprehensive than ML-based approaches)
 
 ### Risks
 
-- Moderation API outage blocks all wish generation (mitigated: moderation failure falls through with warning log, not hard block)
+- Regex evasion via Unicode or encoding tricks (mitigated: input is trimmed and normalized before matching)
 - Adversarial prompt injection (mitigated: structured output schema constrains AI response format)

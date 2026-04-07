@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const WISH_MIN_LENGTH = 2;
-export const WISH_MAX_LENGTH = 200;
+export const WISH_MAX_LENGTH = 60;
 
 export const CATEGORIES = [
   "Technically True",

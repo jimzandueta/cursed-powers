@@ -1,7 +1,7 @@
 # Operations Runbook
 
 **Service:** Cursed Powers Platform  
-**Last Updated:** 2025-03-01  
+**Last Updated:** 2026-04-07  
 **On-Call:** See escalation policy in incident-response.md
 
 ## Table of Contents
@@ -77,12 +77,12 @@ aws ecs describe-services \
 docker build -t cursed-powers-api -f apps/api/Dockerfile .
 docker build -t cursed-powers-web -f apps/web/Dockerfile .
 
-# 2. Tag and push to ECR
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <account-id>.dkr.ecr.us-east-1.amazonaws.com
-docker tag cursed-powers-api:latest <account-id>.dkr.ecr.us-east-1.amazonaws.com/cursed-powers-api:latest
-docker tag cursed-powers-web:latest <account-id>.dkr.ecr.us-east-1.amazonaws.com/cursed-powers-web:latest
-docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/cursed-powers-api:latest
-docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/cursed-powers-web:latest
+# 2. Tag and push to GHCR
+echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+docker tag cursed-powers-api:latest ghcr.io/jimzandueta/cursed-powers-api:latest
+docker tag cursed-powers-web:latest ghcr.io/jimzandueta/cursed-powers-web:latest
+docker push ghcr.io/jimzandueta/cursed-powers-api:latest
+docker push ghcr.io/jimzandueta/cursed-powers-web:latest
 
 # 3. Force new deployment
 aws ecs update-service --cluster cursed-powers-prod --service cursed-powers-prod-api --force-new-deployment
@@ -192,7 +192,7 @@ sqlite3 apps/api/data/wishes.db "SELECT category, COUNT(*) as count FROM wishes 
 
 **Steps**:
 
-1. Check current limits: `RATE_LIMIT_MAX` env var (default: 100)
+1. Check current limits: `RATE_LIMIT_MAX` env var (default: 50), `RATE_LIMIT_WINDOW_MS` (default: 14,400,000ms / 4 hours)
 2. Update via ECS task definition environment variables
 3. WAF rate limit is separate: adjust `waf_rate_limit` in Terraform
 
@@ -204,7 +204,7 @@ sqlite3 apps/api/data/wishes.db "SELECT category, COUNT(*) as count FROM wishes 
 2. Check AI provider API key validity
 3. Check rate limits on AI provider dashboard
 4. Try the teapot endpoint to confirm API is responsive
-5. Check moderation API (OpenAI) status
+5. Check moderation logs for regex-based content blocks
 
 ---
 

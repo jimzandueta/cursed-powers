@@ -15,6 +15,10 @@ const envSchema = z
     RATE_LIMIT_WINDOW_MS: z.coerce.number().default(14_400_000),
     TURNSTILE_SECRET_KEY: z.string().optional().default(""),
     REQUEST_SIGNING_KEY: z.string().optional().default("cursed-genie-default-key"),
+    TRUST_PROXY: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((v) => v === "true"),
   })
   .refine((data) => data.GEMINI_API_KEY || data.OPENAI_API_KEY, {
     message: "At least one of GEMINI_API_KEY or OPENAI_API_KEY must be provided",

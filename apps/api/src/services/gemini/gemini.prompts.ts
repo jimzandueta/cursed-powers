@@ -41,14 +41,31 @@ DISALLOWED CURSE TYPES
 - "only when alone" style conditions
 - vague bad luck
 - side effects that still leave the power strategically useful
+- restricting direction/range/target (e.g. "only away from you", "only leftward", "only at night") — these still leave exploitable utility
 
 GOOD TARGETS
 - the power injures the user through its own mechanism
-- the core mechanic misfires
-- the output cancels the benefit
-- the target is wrong in a way unique to the power
-- the implementation is technically valid but nightmarish
-- the power creates a bigger problem than it solves
+- the core mechanic misfires in a way that cancels the ENTIRE benefit
+- the output reverses onto the user
+- the implementation is technically valid but nightmarish in every scenario
+- the power creates a bigger problem than it solves in ALL cases, not just some
+- the power only works on the one thing it should never affect
+
+CRITICAL DISTINCTION — PARTIAL VS. TOTAL USELESSNESS
+A curse that limits the power's direction, target class, or range is NOT enough.
+The user must be unable to gain ANY benefit, even creatively.
+Ask yourself: "Could a clever person still exploit this in some way?"
+If yes → rewrite. The curse must close every exit.
+
+BAD CURSE EXAMPLE (do not do this):
+  "Telekinesis, but objects only move away from you"
+  → Still useful: push enemies, clear obstacles, throw objects.
+  → FAIL — not useless.
+
+GOOD CURSE EXAMPLE (do this):
+  "Telekinesis, but the force acts on your body instead of the object"
+  → You fling yourself into everything you try to move. Completely self-defeating.
+  → PASS — zero exploitable benefit.
 
 EXPLANATION RULES
 - 25 words max total
@@ -60,10 +77,10 @@ EXPLANATION RULES
 - Do not repeat the cursedPower wording verbatim
 
 USELESSNESS TEST
-Before answering, check:
-- Could someone still use this power effectively? If yes, rewrite.
-- Could this curse fit many unrelated powers? If yes, rewrite.
-- Is this just annoying instead of self-defeating? If yes, rewrite.
+Before answering, run ALL three checks:
+1. Could someone still use this power effectively in ANY scenario? If yes, rewrite.
+2. Could this curse fit many unrelated powers? If yes, rewrite.
+3. Is this just annoying instead of completely self-defeating? If yes, rewrite.
 
 FOR INVALID INPUTS
 Fill the fields this way:

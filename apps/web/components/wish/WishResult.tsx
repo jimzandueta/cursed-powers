@@ -160,29 +160,46 @@ export function WishResult({ result, onRetry }: WishResultProps) {
           {result.category}
         </motion.span>
 
-        {/* Cursed power - dramatic reveal */}
-        <h2 className="font-display text-2xl md:text-3xl font-bold text-gold-400 text-glow leading-tight mb-4">
-          {revealedText}
-          {revealedText !== result.cursedPower && (
-            <motion.span
-              animate={{ opacity: [1, 0] }}
-              transition={{ duration: 0.3, repeat: Infinity }}
-              className="ml-1"
-            >
-              |
-            </motion.span>
-          )}
-        </h2>
+        {/* Cursed power - dramatic reveal
+            Invisible copy establishes final height; visible copy typewriters in on top */}
+        <div className="relative mb-4">
+          <h2
+            className="font-display text-2xl md:text-3xl font-bold leading-tight invisible select-none"
+            aria-hidden="true"
+          >
+            {result.cursedPower}
+          </h2>
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-gold-400 text-glow leading-tight absolute inset-0">
+            {revealedText}
+            {revealedText !== result.cursedPower && (
+              <motion.span
+                animate={{ opacity: [1, 0] }}
+                transition={{ duration: 0.3, repeat: Infinity }}
+                className="ml-1"
+              >
+                |
+              </motion.span>
+            )}
+          </h2>
+        </div>
 
-        {/* Explanation */}
-        <motion.p
-          className="text-white/60 text-sm leading-relaxed italic"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
-        >
-          "{result.explanation}"
-        </motion.p>
+        {/* Explanation — same technique */}
+        <div className="relative">
+          <p
+            className="font-display text-sm leading-relaxed italic invisible select-none"
+            aria-hidden="true"
+          >
+            "{result.explanation}"
+          </p>
+          <motion.p
+            className="font-display text-white/60 text-sm leading-relaxed italic absolute inset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.5 }}
+          >
+            "{result.explanation}"
+          </motion.p>
+        </div>
 
         {/* Uselessness verdict */}
         {showScore && (
@@ -221,7 +238,7 @@ export function WishResult({ result, onRetry }: WishResultProps) {
         <motion.button
           onClick={onRetry}
           className="px-6 py-3 bg-gradient-to-r from-gold-400 to-ember
-                     text-mystic-900 font-display font-bold tracking-wider
+                     text-mystic-900 font-display font-bold tracking-widest
                      rounded-xl glow-gold hover:glow-gold-strong hover:scale-[1.02]
                      transition-all duration-200"
           whileTap={{ scale: 0.98 }}
@@ -235,7 +252,7 @@ export function WishResult({ result, onRetry }: WishResultProps) {
             navigator.clipboard?.writeText(text);
           }}
           className="px-6 py-3 border border-gold-400/20 text-gold-400/80
-                     font-display tracking-wider rounded-xl
+                     font-display font-bold tracking-widest rounded-xl
                      hover:bg-gold-400/5 hover:border-gold-400/40 hover:text-gold-400 transition-all duration-200"
           whileTap={{ scale: 0.98 }}
         >

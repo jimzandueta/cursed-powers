@@ -23,13 +23,16 @@ We will implement a **defense-in-depth security header strategy** across both th
 
 ### API Headers (Helmet)
 
-| Header                    | Value                                                                                                  | Mitigates                |
-| ------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------ |
-| Content-Security-Policy   | `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:` | XSS, injection           |
-| X-Content-Type-Options    | `nosniff`                                                                                              | MIME sniffing            |
-| X-Frame-Options           | `SAMEORIGIN`                                                                                           | Clickjacking             |
-| X-XSS-Protection          | `0` (disabled, CSP is superior)                                                                        | Legacy XSS filter issues |
-| Strict-Transport-Security | `max-age=15552000; includeSubDomains`                                                                  | Protocol downgrade       |
+| Header                      | Value                                                                                                  | Mitigates                |
+| --------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------ |
+| Content-Security-Policy     | `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:` | XSS, injection           |
+| X-Content-Type-Options      | `nosniff`                                                                                              | MIME sniffing            |
+| X-Frame-Options             | `SAMEORIGIN`                                                                                           | Clickjacking             |
+| X-XSS-Protection            | `0` (disabled, CSP is superior)                                                                        | Legacy XSS filter issues |
+| Strict-Transport-Security   | `max-age=15552000; includeSubDomains`                                                                  | Protocol downgrade       |
+| Cross-Origin-Embedder-Policy| `require-corp`                                                                                         | Cross-origin isolation   |
+| Cross-Origin-Opener-Policy  | `same-origin`                                                                                          | Cross-origin attacks     |
+| Cross-Origin-Resource-Policy| `same-origin`                                                                                          | Cross-origin leaks       |
 
 ### Frontend Headers (Next.js)
 
@@ -44,10 +47,11 @@ We will implement a **defense-in-depth security header strategy** across both th
 
 ### Custom Headers
 
-| Header          | Value                                    | Purpose             |
-| --------------- | ---------------------------------------- | ------------------- |
-| X-Powered-By    | `Cursed Genie v0.1.0 (HTCPCP-Compliant)` | RFC 2324 compliance |
-| X-Response-Time | `{duration}ms`                           | Observability       |
+| Header          | Value                                    | Purpose                |
+| --------------- | ---------------------------------------- | ---------------------- |
+| X-Powered-By    | `Cursed Genie v0.1.0 (HTCPCP-Compliant)` | RFC 2324 compliance    |
+| X-Response-Time | `{duration}ms`                           | Observability          |
+| X-Content-Hash  | SHA-256 hex digest of response body      | Response integrity     |
 
 ## Rationale
 

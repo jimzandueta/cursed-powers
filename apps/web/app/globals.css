@@ -13,9 +13,9 @@
   --color-smoke: #2dd4bf40;
   --color-ember: #ef6c00;
 
-  --font-display: "Philosopher", "Cinzel", serif;
-  --font-heading: "Cinzel", serif;
-  --font-body: "Inter", sans-serif;
+  --font-display: var(--font-philosopher), serif;
+  --font-body: var(--font-inter), sans-serif;
+  --font-cursed: var(--font-rubik-glitch), cursive;
 }
 
 /* Base styles */

@@ -20,17 +20,17 @@ The platform must balance accessibility (users should be able to make wishes fre
 
 We will implement **multi-layer rate limiting** using `@fastify/rate-limit`:
 
-### Layer 1: Global Rate Limit
+### Global Rate Limit
 
-- **Maximum**: 100 requests per 15-minute window per IP address
+- **Maximum**: 50 requests per 4-hour window per IP address
 - **Applies to**: All endpoints
 - **Key generator**: Client IP address (via `request.ip`)
 
-### Layer 2: Wish Generation Rate Limit
+### Behavioral Abuse Detection
 
-- **Maximum**: 10 wish generations per 15-minute window per IP address
+- **Per-IP scoring**: Tracks rapid-fire requests, duplicate wishes, missing headers
 - **Applies to**: `POST /api/v1/wishes`
-- **Rationale**: AI generation is the most expensive operation
+- **Threshold-based**: Requests exceeding the abuse score are rejected with HTTP 403
 
 ### Response
 

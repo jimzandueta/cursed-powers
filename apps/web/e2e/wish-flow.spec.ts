@@ -30,7 +30,7 @@ const MOCK_VALIDATION_ERROR = {
 
 /**
  * Simulate lamp rubbing by performing rapid horizontal pointer movements.
- * The LampRubbing component needs 12 direction changes with dx > 10px each.
+ * The LampRubbing component needs 18 direction changes with dx > 10px each.
  */
 async function rubLamp(page: Page) {
   const lamp = page.locator("img[alt='Magic lamp']");
@@ -47,8 +47,8 @@ async function rubLamp(page: Page) {
   await page.mouse.move(startX, centerY);
   await page.mouse.down();
 
-  // Rub back and forth — 14 strokes to ensure we pass 12 threshold
-  for (let i = 0; i < 14; i++) {
+  // Rub back and forth — 20 strokes to ensure we pass the 18 threshold
+  for (let i = 0; i < 20; i++) {
     const target = i % 2 === 0 ? endX : startX;
     await page.mouse.move(target, centerY, { steps: 3 });
   }
@@ -61,7 +61,7 @@ async function rubLamp(page: Page) {
  * and the input form to appear.
  */
 async function waitForInputScreen(page: Page) {
-  await expect(page.locator("input[placeholder='I wish for...']")).toBeVisible({
+  await expect(page.locator("input[aria-label='Superpower wish input']")).toBeVisible({
     timeout: 15_000,
   });
 }
@@ -126,9 +126,9 @@ test.describe("Cursed Powers — Full Wish Flow", () => {
     await waitForInputScreen(page);
 
     // Step 3: Type a wish and submit
-    const input = page.locator("input[placeholder='I wish for...']");
+    const input = page.locator("input[aria-label='Superpower wish input']");
     await input.fill("flight");
-    await page.locator("button", { hasText: "Grant My Wish" }).click();
+    await page.locator("button", { hasText: "Curse This Superpower" }).click();
 
     // Step 4: Loading screen with a spinner message
     await expect(page.locator("text=genie")).toBeVisible({ timeout: 3_000 });

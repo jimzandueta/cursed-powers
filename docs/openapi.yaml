@@ -8,8 +8,13 @@ info:
     No authentication required. This is a free, public API for generating useless superpowers.
 
     ## Rate Limiting
-    - Global: 100 requests per 15 minutes per IP
-    - Wish generation: 10 requests per 15 minutes per IP
+    - Global: 50 requests per 4-hour window per IP
+
+    ## Security
+    - HMAC request signing (X-Request-Timestamp + X-Request-Signature)
+    - Cloudflare Turnstile CAPTCHA verification
+    - Honeypot anti-bot field
+    - Behavioral abuse detection
 
     ## HTCPCP Compliance
     This API is fully compliant with RFC 2324 (Hyper Text Coffee Pot Control Protocol).
@@ -91,7 +96,8 @@ paths:
       summary: Generate a cursed wish
       description: |
         Submit a superpower wish and receive a monkey's-paw-style cursed version.
-        Uses AI (Gemini primary, OpenAI fallback) to generate the curse.
+        Uses AI (Gemini or OpenAI, based on configured API keys) to generate the curse.
+        Identical wishes return cached results. Requires HMAC signature and optional Turnstile token.
 
         **Note:** Tea-related wishes will trigger an HTTP 418 response (RFC 2324 compliance).
       tags: [Wishes]
@@ -120,6 +126,12 @@ paths:
                 $ref: "#/components/schemas/WishResponse"
         "400":
           description: Invalid wish format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden (bot detected, invalid signature, or CAPTCHA failure)
           content:
             application/json:
               schema:
@@ -168,10 +180,6 @@ paths:
             minimum: 1
             maximum: 50
             default: 20
-        - name: category
-          in: query
-          schema:
-            type: string
       responses:
         "200":
           description: Paginated wish list
@@ -179,6 +187,31 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WishListResponse"
+
+  /api/v1/wishes/{id}:
+    get:
+      summary: Get a wish by ID
+      tags: [Wishes]
+      operationId: getWishById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Wish found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WishResponse"
+        "404":
+          description: Wish not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/v1/wishes/random:
     get:
@@ -223,6 +256,26 @@ paths:
                   rfc: "https://datatracker.ietf.org/doc/html/rfc2324"
                   note: "This genie is fully HTCPCP-compliant. You're welcome."
 
+  /api/v1/csp-report:
+    post:
+      summary: CSP violation report endpoint
+      description: Receives Content-Security-Policy violation reports from browsers.
+      tags: [Health]
+      operationId: reportCspViolation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+          application/csp-report:
+            schema:
+              type: object
+      responses:
+        "204":
+          description: Report accepted
+        "429":
+          description: Rate limited (10 per minute)
+
 components:
   schemas:
     CreateWishRequest:
@@ -235,6 +288,13 @@ components:
           maxLength: 200
           description: The superpower wish to be cursed
           example: "I wish I could fly"
+        turnstileToken:
+          type: string
+          description: Cloudflare Turnstile CAPTCHA token (optional in dev)
+        website:
+          type: string
+          maxLength: 0
+          description: Honeypot field — must be empty. Bots that fill this are rejected.
 
     WishResponse:
       type: object
@@ -254,22 +314,17 @@ components:
           type: string
         uselessnessScore:
           type: integer
-          minimum: 1
-          maximum: 10
+          minimum: 0
+          maximum: 100
         category:
           type: string
           enum:
             [
-              physical,
-              mental,
-              social,
-              elemental,
-              temporal,
-              sensory,
-              transformation,
-              meta,
-              cosmic,
-              mundane,
+              Technically True,
+              Cosmically Unfair,
+              Painfully Specific,
+              Existentially Cruel,
+              Aggressively Useless,
             ]
         createdAt:
           type: string
@@ -278,21 +333,14 @@ components:
     WishListResponse:
       type: object
       properties:
-        data:
+        wishes:
           type: array
           items:
             $ref: "#/components/schemas/WishResponse"
-        pagination:
-          type: object
-          properties:
-            page:
-              type: integer
-            limit:
-              type: integer
-            total:
-              type: integer
-            totalPages:
-              type: integer
+        total:
+          type: integer
+        page:
+          type: integer
 
     ErrorResponse:
       type: object

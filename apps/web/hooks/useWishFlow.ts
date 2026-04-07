@@ -19,6 +19,7 @@ interface WishFlowState {
   result: WishResult | null;
   error: { code: string; message: string } | null;
   hasSeenGenie: boolean;
+  hasSubmittedWish: boolean;
 }
 
 type WishFlowAction =
@@ -39,6 +40,7 @@ const initialState: WishFlowState = {
   result: null,
   error: null,
   hasSeenGenie: false,
+  hasSubmittedWish: false,
 };
 
 function reducer(state: WishFlowState, action: WishFlowAction): WishFlowState {
@@ -52,7 +54,7 @@ function reducer(state: WishFlowState, action: WishFlowAction): WishFlowState {
     case "SET_WISH_TEXT":
       return { ...state, wishText: action.text };
     case "SUBMIT_WISH":
-      return { ...state, screen: "loading", error: null };
+      return { ...state, screen: "loading", error: null, hasSubmittedWish: true };
     case "WISH_SUCCESS":
       return { ...state, screen: "result", result: action.result };
     case "WISH_ERROR":

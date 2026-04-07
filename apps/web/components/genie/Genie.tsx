@@ -32,6 +32,46 @@ function generateSmokeParticles(count: number) {
   }));
 }
 
+function generateBurstParticles(count: number) {
+  const palettes = [
+    {
+      core: "rgba(255,252,244,1)",
+      mid: "rgba(255,241,198,0.95)",
+      outer: "rgba(255,228,148,0.55)",
+      glow: "rgba(255,245,214,0.38)",
+    },
+    {
+      core: "rgba(255,248,230,1)",
+      mid: "rgba(255,232,170,0.92)",
+      outer: "rgba(255,212,120,0.48)",
+      glow: "rgba(255,223,156,0.34)",
+    },
+    {
+      core: "rgba(248,244,255,1)",
+      mid: "rgba(255,247,219,0.9)",
+      outer: "rgba(255,235,186,0.42)",
+      glow: "rgba(255,255,240,0.32)",
+    },
+    {
+      core: "rgba(255,255,255,1)",
+      mid: "rgba(255,244,208,0.94)",
+      outer: "rgba(255,223,132,0.5)",
+      glow: "rgba(255,250,225,0.36)",
+    },
+  ];
+
+  return Array.from({ length: count }, (_, i) => ({
+    id: i,
+    angle: (Math.PI * 2 * i) / count,
+    distance: 95 + Math.random() * 125,
+    size: 4 + Math.random() * 10,
+    stretch: 1 + Math.random() * 1.6,
+    delay: Math.random() * 0.22,
+    duration: 0.85 + Math.random() * 0.5,
+    palette: palettes[i % palettes.length],
+  }));
+}
+
 export function Genie({ onRevealed }: GenieProps) {
   const [showText, setShowText] = useState(false);
   const [textComplete, setTextComplete] = useState(false);
@@ -41,6 +81,7 @@ export function Genie({ onRevealed }: GenieProps) {
 
   const sparkles = useMemo(() => generateSparkles(14), []);
   const smokeParticles = useMemo(() => generateSmokeParticles(8), []);
+  const burstParticles = useMemo(() => generateBurstParticles(30), []);
 
   useEffect(() => {
     const showTimer = setTimeout(() => setShowText(true), 1200);
@@ -65,33 +106,93 @@ export function Genie({ onRevealed }: GenieProps) {
   }, [showText, onRevealed]);
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="w-full max-w-lg mx-auto flex flex-col items-center gap-8">
       {/* Burst background glow */}
       <motion.div
         className="absolute inset-0 flex items-center justify-center pointer-events-none"
         initial={{ opacity: 0 }}
-        animate={{ opacity: [0, 0.9, 0.4] }}
-        transition={{ duration: 1.5, times: [0, 0.3, 1] }}
+        animate={{ opacity: [0, 1, 0.45] }}
+        transition={{ duration: 1.7, times: [0, 0.28, 1] }}
       >
-        <div
+        <motion.div
           className="w-[500px] h-[500px] rounded-full blur-3xl"
           style={{
             background:
               "radial-gradient(circle, rgba(50,140,200,0.3) 0%, rgba(232,185,35,0.1) 40%, transparent 70%)",
           }}
+          initial={{ scale: 0.45 }}
+          animate={{ scale: [0.45, 1.2, 1] }}
+          transition={{ duration: 1.4, ease: "easeOut" }}
         />
       </motion.div>
+
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        {burstParticles.map((particle) => (
+          <motion.div
+            key={particle.id}
+            className="absolute rounded-full z-40"
+            style={{
+              width: particle.size * particle.stretch,
+              height: particle.size,
+              background:
+                `radial-gradient(circle, ${particle.palette.core} 0%, ${particle.palette.mid} 42%, ${particle.palette.outer} 68%, transparent 100%)`,
+              boxShadow: `0 0 ${particle.size * 3.5}px ${particle.palette.glow}`,
+              rotate: `${(particle.angle * 180) / Math.PI}deg`,
+            }}
+            initial={{ opacity: 0, scale: 0.2, x: 0, y: 0 }}
+            animate={{
+              opacity: [0, 1, 0],
+              scale: [0.2, 1.2, 0],
+              x: [0, Math.cos(particle.angle) * particle.distance],
+              y: [0, Math.sin(particle.angle) * particle.distance],
+            }}
+            transition={{
+              duration: particle.duration,
+              delay: particle.delay,
+              ease: "easeOut",
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20 overflow-hidden">
+        {smokeParticles.map((p) => (
+          <motion.div
+            key={`summon-${p.id}`}
+            className="absolute rounded-full blur-2xl"
+            style={{
+              left: p.left,
+              top: p.startTop,
+              width: p.size * 1.4,
+              height: p.size * 1.4,
+              background: `radial-gradient(circle, rgba(185,230,255,${p.opacity + 0.08}) 0%, rgba(160,110,255,0.12) 55%, transparent 78%)`,
+            }}
+            initial={{ opacity: 0, scale: 0.45, y: 50 }}
+            animate={{
+              opacity: [0, p.opacity + 0.1, 0],
+              scale: [0.45, 1.3, 1.55],
+              y: [50, -10, -110],
+              x: [0, p.id % 2 === 0 ? 24 : -24, 0],
+            }}
+            transition={{
+              duration: 1.5,
+              delay: p.delay * 0.35,
+              ease: "easeOut",
+            }}
+          />
+        ))}
+      </div>
 
       {/* Genie container with all effects */}
       <motion.div
         className="relative"
-        initial={{ scale: 0.2, opacity: 0, y: 60 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
+        initial={{ scale: 0.08, opacity: 0, y: 120, rotate: -220 }}
+        animate={{ scale: 1, opacity: 1, y: 0, rotate: 0 }}
         transition={{
-          type: "spring",
-          stiffness: 180,
-          damping: 18,
-          duration: 1,
+          rotate: { duration: 1.05, ease: [0.18, 0.9, 0.2, 1] },
+          scale: { type: "spring", stiffness: 180, damping: 16, duration: 1.05 },
+          opacity: { duration: 0.45 },
+          y: { type: "spring", stiffness: 150, damping: 14, duration: 1.05 },
         }}
       >
         {/* Cloud / mystic background behind genie */}
@@ -197,7 +298,7 @@ export function Genie({ onRevealed }: GenieProps) {
       <AnimatePresence>
         {showText && (
           <motion.div
-            className="max-w-md mx-auto px-7 py-5 bg-mystic-800/80 border border-gold-400/20 rounded-2xl backdrop-blur-sm relative"
+            className="w-[22rem] md:w-[32rem] h-[8.5rem] md:h-[9.5rem] mx-auto px-7 py-5 bg-mystic-800/80 border border-gold-400/20 rounded-2xl backdrop-blur-sm relative flex items-center justify-center overflow-hidden"
             style={{
               boxShadow:
                 "0 0 30px rgba(232,185,35,0.08), inset 0 0 20px rgba(50,150,220,0.05)",

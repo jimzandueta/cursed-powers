@@ -123,11 +123,11 @@ export function WishLoading() {
 
       {/* Loading text */}
       <div className="text-center space-y-2">
-        <div className="h-7 flex items-center justify-center">
+        <div className="min-h-7 flex items-center justify-center px-4">
           <AnimatePresence mode="wait">
             <motion.p
               key={messageIndex}
-              className="font-display text-gold-300/80 text-lg tracking-[0.15em] italic whitespace-nowrap"
+              className="font-display text-gold-300/80 text-lg tracking-[0.15em] italic text-center"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}

@@ -21,6 +21,7 @@ export async function buildApp(env: Env) {
           : undefined,
     },
     genReqId: () => generateRequestId(),
+    trustProxy: env.TRUST_PROXY,
   });
 
   await app.register(helmet, {
@@ -38,7 +39,9 @@ export async function buildApp(env: Env) {
   });
 
   await app.register(cors, {
-    origin: env.CORS_ORIGIN,
+    origin: env.CORS_ORIGIN.includes(",")
+      ? env.CORS_ORIGIN.split(",").map((o) => o.trim())
+      : env.CORS_ORIGIN,
     methods: ["GET", "POST"],
   });
 

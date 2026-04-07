@@ -18,7 +18,7 @@ Without fault isolation, a degraded AI provider can cause cascading failures: re
 
 ## Decision
 
-We will implement the **Circuit Breaker pattern** (as described by Michael Nygard in _Release It!_) for each AI provider.
+We will implement the **Circuit Breaker pattern** (as described by Michael Nygard in _Release It!_) for each AI provider, primarily as an **observability and metrics layer** exposed via the health endpoint.
 
 ### State Machine
 
@@ -57,6 +57,8 @@ Each circuit breaker exposes real-time metrics via the health endpoint:
 - Consecutive failure count
 - Total requests / successes / failures
 - Last failure and success timestamps
+
+> **Note:** The current implementation exposes circuit breaker metrics for monitoring via the health endpoint. AI provider calls use a retry-then-fallback strategy (see ADR-003) rather than routing through the circuit breaker's `execute()` path. The breaker infrastructure is in place for future use if provider instability warrants automatic call rejection.
 
 ## Rationale
 

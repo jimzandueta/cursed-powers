@@ -21,8 +21,10 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https:",
       "frame-src https://challenges.cloudflare.com",
-      "connect-src 'self' https://challenges.cloudflare.com " +
-        (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"),
+      process.env.NODE_ENV === "development"
+        ? "connect-src 'self' http: https:"
+        : "connect-src 'self' https://challenges.cloudflare.com " +
+            (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"),
       "report-uri " +
         (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001") +
         "/api/v1/csp-report",

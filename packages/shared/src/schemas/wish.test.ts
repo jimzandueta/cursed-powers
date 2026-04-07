@@ -16,8 +16,8 @@ describe("constants", () => {
     expect(WISH_MIN_LENGTH).toBe(2);
   });
 
-  it("WISH_MAX_LENGTH is 200", () => {
-    expect(WISH_MAX_LENGTH).toBe(200);
+  it("WISH_MAX_LENGTH is 80", () => {
+    expect(WISH_MAX_LENGTH).toBe(80);
   });
 
   it("has 5 categories", () => {
