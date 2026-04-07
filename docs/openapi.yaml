@@ -1,0 +1,397 @@
+openapi: 3.1.0
+info:
+  title: Cursed Powers API
+  description: |
+    Enterprise-grade REST API for generating monkey's-paw-style cursed superpowers.
+
+    ## Authentication
+    No authentication required. This is a free, public API for generating useless superpowers.
+
+    ## Rate Limiting
+    - Global: 100 requests per 15 minutes per IP
+    - Wish generation: 10 requests per 15 minutes per IP
+
+    ## HTCPCP Compliance
+    This API is fully compliant with RFC 2324 (Hyper Text Coffee Pot Control Protocol).
+    Tea-related wishes will receive an HTTP 418 response.
+  version: 0.1.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  contact:
+    name: Cursed Powers Team
+    url: https://github.com/jimzandueta/cursed-powers
+
+servers:
+  - url: http://localhost:3001
+    description: Local development
+  - url: https://api.cursed-powers.example.com
+    description: Production
+
+tags:
+  - name: Health
+    description: Service health and diagnostics
+  - name: Wishes
+    description: Wish generation and retrieval
+  - name: HTCPCP
+    description: RFC 2324 compliance endpoints
+
+paths:
+  /api/v1/health:
+    get:
+      summary: Deep health check
+      description: |
+        Returns comprehensive system health including database connectivity,
+        circuit breaker states, memory usage, and process information.
+      tags: [Health]
+      operationId: getHealth
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                status: ok
+                version: "0.1.0"
+                timestamp: "2025-03-01T12:00:00.000Z"
+                uptime:
+                  seconds: 86400
+                  human: "1d 0h 0m 0s"
+                database:
+                  status: healthy
+                  latencyMs: 0.12
+                circuitBreakers:
+                  gemini:
+                    state: CLOSED
+                    consecutiveFailures: 0
+                    totalRequests: 1042
+                    totalFailures: 2
+                    totalSuccesses: 1040
+                  openai:
+                    state: CLOSED
+                    consecutiveFailures: 0
+                    totalRequests: 3
+                    totalFailures: 0
+                    totalSuccesses: 3
+                process:
+                  pid: 1
+                  nodeVersion: "v24.12.0"
+                  platform: linux
+                  arch: arm64
+                  memory:
+                    rss: "48.23 MB"
+                    heapUsed: "22.15 MB"
+                    heapTotal: "32.00 MB"
+                    external: "1.50 MB"
+
+  /api/v1/wishes:
+    post:
+      summary: Generate a cursed wish
+      description: |
+        Submit a superpower wish and receive a monkey's-paw-style cursed version.
+        Uses AI (Gemini primary, OpenAI fallback) to generate the curse.
+
+        **Note:** Tea-related wishes will trigger an HTTP 418 response (RFC 2324 compliance).
+      tags: [Wishes]
+      operationId: createWish
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWishRequest"
+            examples:
+              basic:
+                summary: Basic wish
+                value:
+                  wish: "I wish I could fly"
+              tea:
+                summary: Tea-related wish (triggers 418)
+                value:
+                  wish: "I wish I could brew the perfect tea"
+      responses:
+        "201":
+          description: Wish cursed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WishResponse"
+        "400":
+          description: Invalid wish format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "418":
+          description: I'm a teapot (RFC 2324)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Wish rejected (not a superpower or content blocked)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Generation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    get:
+      summary: List wishes (gallery)
+      description: Returns paginated list of wishes for the gallery view.
+      tags: [Wishes]
+      operationId: listWishes
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated wish list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WishListResponse"
+
+  /api/v1/wishes/random:
+    get:
+      summary: Get a random wish
+      description: Returns a random previously-generated wish from the gallery.
+      tags: [Wishes]
+      operationId: getRandomWish
+      responses:
+        "200":
+          description: Random wish
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WishResponse"
+        "404":
+          description: No wishes found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v1/teapot:
+    get:
+      summary: HTCPCP compliance endpoint
+      description: |
+        Returns HTTP 418 "I'm a Teapot" per RFC 2324.
+        This endpoint exists solely to demonstrate HTCPCP compliance.
+      tags: [HTCPCP]
+      operationId: getTeapot
+      responses:
+        "418":
+          description: I'm a teapot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeapotResponse"
+              example:
+                error:
+                  code: IM_A_TEAPOT
+                  message: "I'm a teapot. Per RFC 2324, I cannot brew coffee. I can only brew regret."
+                  protocol: "HTCPCP/1.0"
+                  rfc: "https://datatracker.ietf.org/doc/html/rfc2324"
+                  note: "This genie is fully HTCPCP-compliant. You're welcome."
+
+components:
+  schemas:
+    CreateWishRequest:
+      type: object
+      required: [wish]
+      properties:
+        wish:
+          type: string
+          minLength: 2
+          maxLength: 200
+          description: The superpower wish to be cursed
+          example: "I wish I could fly"
+
+    WishResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique wish identifier
+        originalWish:
+          type: string
+        cursedPower:
+          type: string
+          description: The monkey's-paw-style cursed version
+        butClause:
+          type: string
+          description: The "but" clause that makes it terrible
+        explanation:
+          type: string
+        uselessnessScore:
+          type: integer
+          minimum: 1
+          maximum: 10
+        category:
+          type: string
+          enum:
+            [
+              physical,
+              mental,
+              social,
+              elemental,
+              temporal,
+              sensory,
+              transformation,
+              meta,
+              cosmic,
+              mundane,
+            ]
+        createdAt:
+          type: string
+          format: date-time
+
+    WishListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/WishResponse"
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+            limit:
+              type: integer
+            total:
+              type: integer
+            totalPages:
+              type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            requestId:
+              type: string
+
+    TeapotResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              enum: [IM_A_TEAPOT]
+            message:
+              type: string
+            protocol:
+              type: string
+            rfc:
+              type: string
+              format: uri
+            note:
+              type: string
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+        version:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        uptime:
+          type: object
+          properties:
+            seconds:
+              type: integer
+            human:
+              type: string
+        database:
+          type: object
+          properties:
+            status:
+              type: string
+              enum: [healthy, unhealthy]
+            latencyMs:
+              type: number
+        circuitBreakers:
+          type: object
+          properties:
+            gemini:
+              $ref: "#/components/schemas/CircuitBreakerMetrics"
+            openai:
+              $ref: "#/components/schemas/CircuitBreakerMetrics"
+        process:
+          type: object
+          properties:
+            pid:
+              type: integer
+            nodeVersion:
+              type: string
+            platform:
+              type: string
+            arch:
+              type: string
+            memory:
+              type: object
+
+    CircuitBreakerMetrics:
+      type: object
+      properties:
+        state:
+          type: string
+          enum: [CLOSED, OPEN, HALF_OPEN]
+        consecutiveFailures:
+          type: integer
+        totalRequests:
+          type: integer
+        totalFailures:
+          type: integer
+        totalSuccesses:
+          type: integer
+        lastFailureTime:
+          type: integer
+          nullable: true
+        lastSuccessTime:
+          type: integer
+          nullable: true
+        stateChangedAt:
+          type: integer

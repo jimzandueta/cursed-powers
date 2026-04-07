@@ -1,0 +1,38 @@
+name: Feature Request
+description: Suggest an idea to make wishes more cursed
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Got an idea to make the genie even more devious? We're listening.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What's the idea?
+      description: A clear description of what you'd like to see.
+      placeholder: "The genie should roast you after revealing the curse..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the app does this relate to?
+      options:
+        - Frontend (UI/animations)
+        - Backend (API/server)
+        - AI responses (prompt/personality)
+        - New feature
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Any mockups, examples, or extra context.
