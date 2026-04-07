@@ -16,8 +16,8 @@ describe("constants", () => {
     expect(WISH_MIN_LENGTH).toBe(2);
   });
 
-  it("WISH_MAX_LENGTH is 80", () => {
-    expect(WISH_MAX_LENGTH).toBe(80);
+  it("WISH_MAX_LENGTH is 60", () => {
+    expect(WISH_MAX_LENGTH).toBe(60);
   });
 
   it("has 5 categories", () => {
@@ -73,7 +73,7 @@ describe("CreateWishSchema", () => {
   });
 
   it("accepts exactly max length", () => {
-    const result = CreateWishSchema.safeParse({ wish: "x".repeat(200) });
+    const result = CreateWishSchema.safeParse({ wish: "x".repeat(60) });
     expect(result.success).toBe(true);
   });
 
