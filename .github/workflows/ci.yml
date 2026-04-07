@@ -1,0 +1,196 @@
+name: "🧞 Cursed CI Pipeline"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22"
+  GEMINI_API_KEY: "test-key-ci-pipeline"
+  OPENAI_API_KEY: "test-key-ci-pipeline"
+
+jobs:
+  typecheck:
+    name: "🔍 Typecheck"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run type checking across all packages
+        run: npx turbo typecheck
+
+  lint:
+    name: "✨ Lint"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting across all packages
+        run: npx turbo lint
+
+  security-audit:
+    name: "🛡️ Security Audit"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit dependencies for known vulnerabilities
+        run: npm audit --audit-level=high
+
+  build-and-test:
+    name: "🏗️ Build & Test"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build all packages
+        run: npx turbo build
+
+      - name: Run unit tests with coverage
+        run: |
+          cd apps/api && npx vitest run --coverage 2>&1
+          cd ../..
+          cd packages/shared && npx vitest run 2>&1
+
+      - name: Upload API coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-coverage-report
+          path: apps/api/coverage/
+          retention-days: 14
+
+  commitlint:
+    name: "📝 Commitlint"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate PR commits
+        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+  e2e:
+    name: "🎭 E2E Tests"
+    runs-on: ubuntu-latest
+    needs: [build-and-test]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build all packages
+        run: npx turbo build
+
+      - name: Install Playwright Chromium
+        run: cd apps/web && npx playwright install chromium --with-deps
+
+      - name: Run E2E tests
+        run: cd apps/web && npx playwright test --config=playwright.config.ts
+        env:
+          CI: true
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/test-results/
+          retention-days: 7
+
+  ci-gate:
+    name: "🚦 CI Gate"
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [typecheck, lint, security-audit, build-and-test, e2e]
+    steps:
+      - name: Check all jobs
+        run: |
+          echo "🧞 The genie is reviewing your CI results..."
+          echo ""
+          echo "  Typecheck:       ${{ needs.typecheck.result }}"
+          echo "  Lint:            ${{ needs.lint.result }}"
+          echo "  Security Audit:  ${{ needs.security-audit.result }}"
+          echo "  Build & Test:    ${{ needs.build-and-test.result }}"
+          echo "  E2E:             ${{ needs.e2e.result }}"
+          echo ""
+
+          if [[ "${{ needs.typecheck.result }}" != "success" ]] || \
+             [[ "${{ needs.lint.result }}" != "success" ]] || \
+             [[ "${{ needs.security-audit.result }}" != "success" ]] || \
+             [[ "${{ needs.build-and-test.result }}" != "success" ]] || \
+             [[ "${{ needs.e2e.result }}" != "success" ]]; then
+            echo "❌ The genie rejects this PR. Fix the failures above."
+            exit 1
+          fi
+
+          echo "✅ The genie approves. All checks passed."

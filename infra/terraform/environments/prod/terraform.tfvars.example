@@ -1,0 +1,31 @@
+# Production terraform.tfvars — FILL IN YOUR VALUES
+# Copy this file to terraform.tfvars and update accordingly.
+
+project_name = "cursed-powers"
+environment  = "prod"
+aws_region   = "us-east-1"
+
+# Container images (update after building & pushing)
+api_image = "123456789012.dkr.ecr.us-east-1.amazonaws.com/cursed-powers-api:latest"
+web_image = "123456789012.dkr.ecr.us-east-1.amazonaws.com/cursed-powers-web:latest"
+
+# Domain (leave empty to skip Route53/ACM custom domain)
+domain_name = ""
+
+# WAF
+enable_waf     = true
+waf_rate_limit = 2000
+
+# Container sizing
+api_cpu           = 1024
+api_memory        = 2048
+web_cpu           = 512
+web_memory        = 1024
+api_desired_count = 1
+web_desired_count = 1
+
+# Secrets — DO NOT commit real values. Use:
+#   export TF_VAR_gemini_api_key="your-key-here"
+#   export TF_VAR_openai_api_key="your-key-here"
+# gemini_api_key = ""
+# openai_api_key = ""
