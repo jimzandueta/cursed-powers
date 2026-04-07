@@ -7,7 +7,7 @@ The Cursed Powers security team takes all vulnerability reports seriously — ev
 ### Reporting Process
 
 1. **DO NOT** open a public GitHub issue for security vulnerabilities
-2. Email security findings to: **security@cursed-powers.example.com**
+2. Use GitHub's Security Advisory feature: [Report a vulnerability](https://github.com/jimzandueta/cursed-powers/security/advisories)
 3. Include:
    - Description of the vulnerability
    - Steps to reproduce

@@ -1,5 +1,7 @@
 # Service Level Agreement (SLA)
 
+> **Reference Only:** This SLA reflects the hosted Cursed Powers service. Self-hosted deployments should define their own SLOs based on their infrastructure and needs.
+
 **Effective Date:** 2026-04-05  
 **Document Owner:** Platform Engineering  
 **Service:** Cursed Powers — Wish Generation Platform

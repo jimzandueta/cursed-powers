@@ -1,4 +1,4 @@
-# Cursed Powers 🧞
+# Cursed Powers
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
@@ -6,11 +6,21 @@
 [![Terraform](https://img.shields.io/badge/IaC-Terraform-7B42BC)](infra/terraform/)
 [![ADRs](https://img.shields.io/badge/docs-9%20ADRs-informational)](docs/adr/)
 
-**Every superpower has a catch™**
+> **Every superpower has a catch™**
 
-A web app where you rub a magic lamp, summon a genie, wish for a superpower, and AI returns a hilariously cursed version.
+Cursed Powers is a full-stack web application that combines AI with interactive storytelling. Users rub a magic lamp to summon a genie, make a superpower wish, and receive a hilariously cursed interpretation of their wish powered by AI.
 
-> _"The engineering is inversely proportional to the usefulness."_
+The engineering is production-grade. The usefulness is thoroughly cursed.
+
+## Features
+
+- **Interactive Lamp Experience**: Animated lamp-rubbing interface that triggers genie summoning
+- **Dual AI Providers**: Fallback-capable integration with Google Gemini 2.5 Flash and OpenAI GPT-4o-mini
+- **Security-First Backend**: Rate limiting, abuse detection, request signing, CAPTCHA verification, and content moderation
+- **Real-Time Results**: WebSocket-ready architecture with progressive result streaming
+- **Enterprise Deployment**: Production-ready infrastructure with AWS ECS Fargate, CloudFront CDN, WAF, and automated scaling
+- **Comprehensive Testing**: 192 unit tests (100% API coverage) + 14 E2E browser tests
+- **Type-Safe**: 100% TypeScript with strict mode across frontend and backend
 
 ## Architecture
 
@@ -20,16 +30,16 @@ A web app where you rub a magic lamp, summon a genie, wish for a superpower, and
                          │     + WAF (4 rule groups)    │
                          └──────────────┬───────────────┘
                                         │
-                         ┌──────────────▼───────────────┐
-                         │     Application Load Balancer │
+                         ┌──────────────▼─────────────────┐
+                         │     Application Load Balancer  │
                          │   (TLS 1.3, path-based routing)│
-                         └───────┬──────────────┬───────┘
+                         └───────┬──────────────┬─────────┘
                                  │              │
                     /api/*       │              │    /*
                    ┌─────────────▼──┐   ┌──────▼────────────┐
                    │   ECS Fargate  │   │   ECS Fargate     │
                    │   Fastify API  │   │   Next.js Web     │
-                   │                │   │                    │
+                   │                │   │                   │
                    │  ┌──────────┐  │   │  Security Headers │
                    │  │ Helmet   │  │   │  HSTS, CSP, etc.  │
                    │  │ Rate Lim │  │   └───────────────────┘
@@ -178,31 +188,49 @@ feat(api): Add thing.   # No capital, no period
 
 ### Git Hooks (Husky)
 
-| Hook        | Action                                              |
-| ----------- | --------------------------------------------------- |
-| pre-commit  | Runs lint-staged (type-checking + related tests)    |
-| commit-msg  | Validates commit message via commitlint             |
-| pre-push    | Runs full `turbo build` + `turbo test` (192 tests)  |
+| Hook       | Action                                             |
+| ---------- | -------------------------------------------------- |
+| pre-commit | Runs lint-staged (type-checking + related tests)   |
+| commit-msg | Validates commit message via commitlint            |
+| pre-push   | Runs full `turbo build` + `turbo test` (192 tests) |
 
 ### CI/CD Pipeline (GitHub Actions)
 
-Every push to `main` and every PR triggers the **Cursed CI Pipeline**:
+Every push to `main` and every PR triggers the CI pipeline:
 
-| Job              | Description                                            |
-| ---------------- | ------------------------------------------------------ |
-| 🔍 Typecheck     | TypeScript type checking across all packages           |
-| ✨ Lint           | Code linting across all packages                       |
-| 🏗️ Build & Test  | Full build + 192 unit tests with coverage reporting    |
-| 📝 Commitlint    | Validates PR commit messages (PRs only)                |
-| 🎭 E2E           | 14 Playwright browser tests (lamp → genie → wish flow) |
-| 🚦 CI Gate       | Required status check — all jobs must pass             |
+| Job          | Description                                            |
+| ------------ | ------------------------------------------------------ |
+| Typecheck    | TypeScript type checking across all packages           |
+| Lint         | Code linting across all packages                       |
+| Build & Test | Full build + 192 unit tests with coverage reporting    |
+| Commitlint   | Validates PR commit messages (PRs only)                |
+| E2E Tests    | 14 Playwright browser tests (lamp → genie → wish flow) |
+| CI Gate      | Required status check — all jobs must pass             |
 
-Tag pushes (`v*`) trigger the **Cursed Release Pipeline**: validation → Genie Approval Board → Docker image builds → GitHub Release with auto-generated notes.
+Tag pushes (`v*`) trigger the release pipeline: validation → Docker image builds → GitHub Release with auto-generated notes.
 
 ## Contributing
 
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
+
+- How to report bugs and suggest features
+- Development setup and workflow
+- Code style and conventions
+- Testing requirements
+
+All contributions should maintain our high standards for code quality and test coverage.
+
+## Security
+
+For security vulnerabilities, please refer to our [SECURITY.md](SECURITY.md) policy. We take security seriously and appreciate responsible disclosure.
 
 ## License
 
-[MIT](LICENSE) — do whatever you want with it.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+## Support & Questions
+
+- Open an issue for bug reports and feature requests
+- Check existing [ADRs](docs/adr/) for architecture decisions
+- See [docs/](docs/) for detailed documentation
+- Visit the [runbook](docs/runbook.md) for operational guidance

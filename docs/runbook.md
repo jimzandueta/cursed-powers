@@ -1,8 +1,9 @@
 # Operations Runbook
 
+> **Note:** This is internal operations documentation for maintainers. Deployments of Cursed Powers may vary. Adapt these instructions to your infrastructure.
+
 **Service:** Cursed Powers Platform  
-**Last Updated:** 2026-04-07  
-**On-Call:** See escalation policy in incident-response.md
+**Last Updated:** 2026-04-07
 
 ## Table of Contents
 
@@ -22,8 +23,8 @@
 # Local
 curl http://localhost:3001/api/v1/health | jq
 
-# Production
-curl https://your-domain.com/api/v1/health | jq
+# Production (replace with your domain)
+curl https://YOUR_DOMAIN/api/v1/health | jq
 
 # Expected response includes:
 # - status: "ok" or "degraded"
@@ -37,7 +38,7 @@ curl https://your-domain.com/api/v1/health | jq
 ### 1.2 Check Teapot Compliance
 
 ```bash
-curl -i https://your-domain.com/api/v1/teapot
+curl -i https://YOUR_DOMAIN/api/v1/teapot
 # Expected: HTTP/1.1 418 I'm a Teapot
 ```
 
@@ -78,7 +79,7 @@ docker build -t cursed-powers-api -f apps/api/Dockerfile .
 docker build -t cursed-powers-web -f apps/web/Dockerfile .
 
 # 2. Tag and push to GHCR
-echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+echo $GITHUB_TOKEN | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 docker tag cursed-powers-api:latest ghcr.io/jimzandueta/cursed-powers-api:latest
 docker tag cursed-powers-web:latest ghcr.io/jimzandueta/cursed-powers-web:latest
 docker push ghcr.io/jimzandueta/cursed-powers-api:latest
@@ -221,7 +222,7 @@ aws ecs update-service --cluster cursed-powers-prod --service cursed-powers-prod
 aws ecs update-service --cluster cursed-powers-prod --service cursed-powers-prod-web --force-new-deployment
 
 # 3. Verify recovery
-curl https://your-domain.com/api/v1/health
+curl https://YOUR_DOMAIN/api/v1/health
 ```
 
 ### 5.2 Database Recovery

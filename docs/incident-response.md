@@ -1,5 +1,7 @@
 # Incident Response Plan
 
+> **Maintainers Only:** This is internal documentation for the Cursed Powers team. For open-source adopters, adapt these procedures to your incident management process.
+
 **Document Owner:** Site Reliability Engineering  
 **Last Review:** 2026-04-06  
 **Next Review:** 2026-07-06  

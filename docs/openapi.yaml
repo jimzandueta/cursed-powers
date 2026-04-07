@@ -30,8 +30,8 @@ info:
 servers:
   - url: http://localhost:3001
     description: Local development
-  - url: https://api.cursed-powers.example.com
-    description: Production
+  - url: https://api.cursed-powers.io
+    description: Production (when deployed)
 
 tags:
   - name: Health

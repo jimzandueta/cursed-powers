@@ -1,29 +1,33 @@
 # Architecture Decision Records
 
-This directory contains Architecture Decision Records (ADRs) for the Cursed Powers platform.
+This directory contains Architecture Decision Records (ADRs) for Cursed Powers. ADRs document significant architectural decisions, capturing the context, decision rationale, and consequences. This practice ensures our technical choices are transparent, intentional, and easily referenced by contributors.
 
-ADRs are numbered sequentially and document significant architectural decisions made during the lifecycle of the project. Each record captures the context, decision, and consequences of a particular choice.
+## Quick Links
 
-## Index
+| Decision                                       | Focus Area                                     |
+| ---------------------------------------------- | ---------------------------------------------- |
+| [ADR-001](001-monorepo-architecture.md)        | Monorepo with Turborepo + npm workspaces       |
+| [ADR-002](002-database-selection.md)           | SQLite as primary datastore with WAL mode      |
+| [ADR-003](003-dual-ai-provider.md)             | Google Gemini + OpenAI with circuit breakers   |
+| [ADR-004](004-rate-limiting-strategy.md)       | Enterprise-grade rate limiting & abuse detect |
+| [ADR-005](005-input-moderation.md)             | Content moderation & safety constraints       |
+| [ADR-006](006-deployment-architecture.md)      | AWS ECS Fargate, CloudFront, WAF, & EFS       |
+| [ADR-007](007-security-headers.md)             | Defense-in-depth security headers & CSP       |
+| [ADR-008](008-circuit-breaker-pattern.md)      | Circuit breaker pattern for resilience        |
+| [ADR-009](009-htcpcp-compliance.md)            | HTCPCP protocol compliance (RFC 2324)         |
 
-| ADR                                       | Title                             | Status   | Date       |
-| ----------------------------------------- | --------------------------------- | -------- | ---------- |
-| [ADR-001](001-monorepo-architecture.md)   | Monorepo Architecture             | Accepted | 2026-04-01 |
-| [ADR-002](002-database-selection.md)      | SQLite as Primary Datastore       | Accepted | 2026-04-01 |
-| [ADR-003](003-dual-ai-provider.md)        | Dual AI Provider Strategy         | Accepted | 2026-04-02 |
-| [ADR-004](004-rate-limiting-strategy.md)  | Enterprise Rate Limiting Strategy | Accepted | 2026-04-02 |
-| [ADR-005](005-input-moderation.md)        | Input Moderation Pipeline         | Accepted | 2026-04-03 |
-| [ADR-006](006-deployment-architecture.md) | AWS ECS Fargate Deployment        | Accepted | 2026-04-04 |
-| [ADR-007](007-security-headers.md)        | Defense-in-Depth Security Headers | Accepted | 2026-04-05 |
-| [ADR-008](008-circuit-breaker-pattern.md) | Circuit Breaker Pattern           | Accepted | 2026-04-06 |
-| [ADR-009](009-htcpcp-compliance.md)       | HTCPCP Protocol Compliance        | Accepted | 2026-04-07 |
+## Status Legend
+
+- **Accepted** — Implemented and in use
+- **Deprecated** — Superseded by a newer decision
+- **Proposed** — Under consideration
 
 ## Format
 
-Each ADR follows the format established by Michael Nygard:
+Each ADR follows a standard template:
 
-1. **Title** — A short noun phrase
-2. **Status** — Proposed, Accepted, Deprecated, or Superseded
-3. **Context** — The forces at play
-4. **Decision** — The response to those forces
-5. **Consequences** — The resulting context after applying the decision
+1. **Title** — Short, descriptive noun phrase
+2. **Status** — Accepted, Deprecated, or Proposed
+3. **Context** — The problem and forces at play
+4. **Decision** — The choice made and reasoning
+5. **Consequences** — Impact and tradeoffs
